@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "629304302299",
+    "project_id": "confab-65022",
+    "storage_bucket": "confab-65022.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:629304302299:android:1e9407f2fa3c4548c38afe",
+        "android_client_info": {
+          "package_name": "com.example.confab"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "629304302299-6h1lhghnssk72cpr2bsilo1k9n32b7v9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.confab",
+            "certificate_hash": "f92a88262545204ca59db80d60e851a9803a696b"
+          }
+        },
+        {
+          "client_id": "629304302299-2146jlvk7st9ln7j9esr9to4vfsvndi7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC4NIaRL4sm3TOfkKBGWPnlvNzvHqZzhVI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "629304302299-2146jlvk7st9ln7j9esr9to4vfsvndi7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
