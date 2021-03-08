@@ -26,26 +26,11 @@ class _ChatRoomState extends State<ChatRoom> {
   List chats = [];
   List otherUsers = [];
   List<String> otherUserNames = [];
-  // String getPhotoURL(String userName) {
-  //   Firestore.instance
-  //       .collection('users')
-  //       .getDocuments()
-  //       .then((QuerySnapshot querySnapshot) => {
-  //             querySnapshot.documents.forEach((doc) {
-  //               //print(doc["first_name"]);
-  //               if (userName == doc['userName']) {
-  //                 print(doc['userName']);
-  //                 print(doc['profilePhoto']);
-  //                 photoURL = doc['profilePhoto'];
-  //                 setState(() {});
-  //               }
-  //             })
-  //           });
-  //   return photoURL;
-  // }
+ 
   @override
   void initState() {
     getUsers();
+    getUserInfogetChats();
     super.initState();
   }
 
@@ -96,12 +81,6 @@ class _ChatRoomState extends State<ChatRoom> {
             })
         : Container();
   }
-
-  // @override
-  // void initState() {
-  //   getUserInfogetChats();
-  //   super.initState();
-  // }
 
   getUserInfogetChats() async {
     Constants.myName = await HelperFunctions.getUserNameSharedPreference();

@@ -1,8 +1,5 @@
 import '../models/user.dart';
-import '../views/chat.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../helper/helperfunctions.dart';
 
 class AuthService {
@@ -45,26 +42,26 @@ class AuthService {
     }
   }
 
-  Future<FirebaseUser> signInWithGoogle(BuildContext context) async {
-    final GoogleSignIn _googleSignIn = new GoogleSignIn();
+  // Future<FirebaseUser> signInWithGoogle(BuildContext context) async {
+  //   final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-    final GoogleSignInAccount googleSignInAccount =
-        await _googleSignIn.signIn();
-    final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount.authentication;
+  //   final GoogleSignInAccount googleSignInAccount =
+  //       await _googleSignIn.signIn();
+  //   final GoogleSignInAuthentication googleSignInAuthentication =
+  //       await googleSignInAccount.authentication;
 
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
-        idToken: googleSignInAuthentication.idToken,
-        accessToken: googleSignInAuthentication.accessToken);
+  //   final AuthCredential credential = GoogleAuthProvider.getCredential(
+  //       idToken: googleSignInAuthentication.idToken,
+  //       accessToken: googleSignInAuthentication.accessToken);
 
-    AuthResult result = await _auth.signInWithCredential(credential);
-    FirebaseUser userDetails = result.user;
+  //   AuthResult result = await _auth.signInWithCredential(credential);
+  //   FirebaseUser userDetails = result.user;
 
-    if (result == null) {
-    } else {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => Chat()));
-    }
-  }
+  //   if (result == null) {
+  //   } else {
+  //     Navigator.push(context, MaterialPageRoute(builder: (context) => Chat()));
+  //   }
+  // }
 
   Future signOut() async {
     try {

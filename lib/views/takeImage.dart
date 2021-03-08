@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confab/helper/authenticate.dart';
 import 'package:confab/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path/path.dart' as Path;
 import 'package:flutter/material.dart';
@@ -21,24 +20,21 @@ class ImagePickScreen extends StatefulWidget {
 class _ImagePickScreenState extends State<ImagePickScreen> {
 //Firestore Code (Raza Bhai)
 
-  Future<void> updateImage(String dpURL) async {
-    // print('yahan agaya 1');
-    // await Firestore.instance
-    //     .collection('users')
-    //     .document((await FirebaseAuth.instance.currentUser()).uid)
-    //     .updateData({'profilePhoto': 'dpURL'});
-    // print('yahan agaya 2');
+  bool isLoading = false;
 
-    print('yahan agaya 1');
+  Future<void> updateImage(String dpURL) async {
     await Firestore.instance
         .collection('users')
         .document((await FirebaseAuth.instance.currentUser()).uid)
         .updateData({'profilePhoto': dpURL});
-    print('yahan agaya 2');
   }
 
 //Firestorage Code
   Future uploadFile() async {
+    setState(() {
+      isLoading = true;
+    });
+
     StorageReference storageReference = FirebaseStorage.instance
         .ref()
         .child('profilePictures/${Path.basename(_image.path)}}');
@@ -48,9 +44,9 @@ class _ImagePickScreenState extends State<ImagePickScreen> {
     storageReference.getDownloadURL().then((fileURL) {
       updateImage(fileURL);
       print('file URL :' + fileURL);
-      print('yahan agaya 0');
       setState(() {
         _uploadedFileURL = fileURL;
+        isLoading = false;
       });
     });
   }
@@ -125,57 +121,63 @@ class _ImagePickScreenState extends State<ImagePickScreen> {
         icon: Icon(Icons.done),
         backgroundColor: Colors.blue,
       ),
-      body: Container(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProfileAvatar(
-              '',
-              child: _image != null
-                  ? FittedBox(child: Image.file(_image),fit:BoxFit.fill)
-                  : Icon(Icons.person, size: 60),
-              borderColor: Colors.blueAccent,
-              borderWidth: 7,
-              elevation: 5,
-              radius: 100,
-            ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.05,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                RawMaterialButton(
-                  fillColor: Theme.of(context).accentColor,
-                  child: Icon(
-                    Icons.add_photo_alternate_rounded,
-                    color: Colors.white,
-                  ),
-                  elevation: 8,
-                  onPressed: () {
-                    getImage(true);
-                  },
-                  padding: EdgeInsets.all(15),
-                  shape: CircleBorder(),
-                ),
-                RawMaterialButton(
-                  fillColor: Theme.of(context).accentColor,
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: Colors.white,
-                  ),
-                  elevation: 8,
-                  onPressed: () {
-                    getImage(false);
-                  },
-                  padding: EdgeInsets.all(15),
-                  shape: CircleBorder(),
-                ),
-              ],
+      body: isLoading
+          ? Container(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
             )
-          ],
-        ),
-      ),
+          : Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProfileAvatar(
+                    '',
+                    child: _image != null
+                        ? FittedBox(child: Image.file(_image), fit: BoxFit.fill)
+                        : Icon(Icons.person, size: 60),
+                    borderColor: Colors.blueAccent,
+                    borderWidth: 7,
+                    elevation: 5,
+                    radius: 100,
+                  ),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.05,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RawMaterialButton(
+                        fillColor: Theme.of(context).accentColor,
+                        child: Icon(
+                          Icons.add_photo_alternate_rounded,
+                          color: Colors.white,
+                        ),
+                        elevation: 8,
+                        onPressed: () {
+                          getImage(true);
+                        },
+                        padding: EdgeInsets.all(15),
+                        shape: CircleBorder(),
+                      ),
+                      RawMaterialButton(
+                        fillColor: Theme.of(context).accentColor,
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                        ),
+                        elevation: 8,
+                        onPressed: () {
+                          getImage(false);
+                        },
+                        padding: EdgeInsets.all(15),
+                        shape: CircleBorder(),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
     );
   }
 }

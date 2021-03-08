@@ -1,15 +1,11 @@
 import 'dart:async';
-
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
-import 'package:flutter/scheduler.dart';
-
 import '../helper/constants.dart';
 import '../services/database.dart';
 import '../widget/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:confab/models/user.dart';
+import 'package:sizer/sizer.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -26,13 +22,15 @@ class _ChatState extends State<Chat> {
 
   TextEditingController messageEditingController = new TextEditingController();
   ScrollController _scrollController = ScrollController();
+
   Widget chatMessages() {
-    final items = List<String>.generate(50, (i) => "Item $i");
+    //   final items = List<String>.generate(50, (i) => "Item $i");
     return StreamBuilder(
       stream: chats,
       builder: (context, snapshot) {
         return snapshot.hasData
             ? ListView.builder(
+                //reverse: true,
                 controller: _scrollController,
                 itemCount: snapshot.data.documents.length,
                 itemBuilder: (context, index) {
@@ -43,6 +41,7 @@ class _ChatState extends State<Chat> {
                   );
                 })
             : Container();
+            
       },
     );
   }
@@ -77,7 +76,7 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     print(widget.profilePhoto);
     Timer(
-      Duration(seconds: 1),
+      Duration(milliseconds: 100),
       () =>
           _scrollController.jumpTo(_scrollController.position.maxScrollExtent),
     );
@@ -97,7 +96,9 @@ class _ChatState extends State<Chat> {
             CircularProfileAvatar(
               '',
               child: widget.profilePhoto != null
-                  ? Image.network(widget.profilePhoto)
+                  ? FittedBox(
+                      child: Image.network(widget.profilePhoto),
+                      fit: BoxFit.fill)
                   : Icon(Icons.person, size: 50),
               borderColor: Colors.blueAccent,
               borderWidth: 4,
@@ -112,9 +113,9 @@ class _ChatState extends State<Chat> {
         ),
       ),
       body: Container(
-        child: Stack(
+        child: Column(
           children: [
-            chatMessages(),
+            Expanded(child: chatMessages()),
             Container(
               alignment: Alignment.bottomCenter,
               width: MediaQuery.of(context).size.width,
@@ -125,7 +126,7 @@ class _ChatState extends State<Chat> {
                   children: [
                     Expanded(
                         child: TextField(
-                      autofocus: true,
+                      //autofocus: true,
                       controller: messageEditingController,
                       style: simpleTextStyle(),
                       decoration: InputDecoration(

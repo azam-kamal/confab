@@ -1,5 +1,8 @@
+import 'package:circular_profile_avatar/circular_profile_avatar.dart';
+import 'package:confab/helper/authenticate.dart';
+import 'package:confab/services/auth.dart';
+import 'package:sizer/sizer.dart';
 import '../helper/constants.dart';
-import '../models/user.dart';
 import '../services/database.dart';
 import '../views/chat.dart';
 import '../widget/widget.dart';
@@ -46,13 +49,14 @@ class _SearchState extends State<Search> {
               return userTile(
                 searchResultSnapshot.documents[index].data["userName"],
                 searchResultSnapshot.documents[index].data["userEmail"],
+                searchResultSnapshot.documents[index].data["profilePhoto"],
               );
             })
         : Container();
   }
 
   /// 1.create a chatroom, send user to the chatroom, other userdetails
-  sendMessage(String userName) {
+  sendMessage(String userName, String profilePhoto) {
     List<String> users = [Constants.myName, userName];
 
     String chatRoomId = getChatRoomId(Constants.myName, userName);
@@ -70,10 +74,11 @@ class _SearchState extends State<Search> {
             builder: (context) => Chat(
                   chatRoomId: chatRoomId,
                   userName: userName,
+                  profilePhoto: profilePhoto,
                 )));
   }
 
-  Widget userTile(String userName, String userEmail) {
+  Widget userTile(String userName, String userEmail, String profilePhoto) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -81,20 +86,45 @@ class _SearchState extends State<Search> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                userName,
-                style: TextStyle(color: Colors.black, fontSize: 16),
+              Row(
+                children: [
+                  CircularProfileAvatar(
+                    '',
+                    child: profilePhoto != null
+                        ? FittedBox(
+                            child: Image.network(profilePhoto),
+                            fit: BoxFit.fill)
+                        : Icon(Icons.person, size: 50),
+                    borderColor: Colors.blueAccent,
+                    borderWidth: 4,
+                    elevation: 7,
+                    radius: 23,
+                  ),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userName,
+                        style:
+                            TextStyle(color: Colors.black, fontSize: 14.0.sp),
+                        textAlign: TextAlign.start,
+                      ),
+                      Text(
+                        userEmail,
+                        style:
+                            TextStyle(color: Colors.black, fontSize: 12.0.sp),
+                      )
+                    ],
+                  ),
+                ],
               ),
-              Text(
-                userEmail,
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              )
             ],
           ),
           Spacer(),
           GestureDetector(
             onTap: () {
-              sendMessage(userName);
+              sendMessage(userName, profilePhoto);
             },
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -127,7 +157,32 @@ class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBarMain(context),
+      appBar: AppBar(
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () async {
+              Navigator.of(context).pop();
+            }),
+        title: Row(
+          children: [
+            Text('Chats'),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
+            Icon(Icons.chat_bubble, size: 20),
+          ],
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () async {
+              AuthService().signOut();
+              await Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => Authenticate()));
+            },
+            child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Icon(Icons.exit_to_app)),
+          )
+        ],
+      ),
       body: isLoading
           ? Container(
               child: Center(
