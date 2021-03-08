@@ -1,6 +1,6 @@
 # confab
 
-A new Flutter project.
+Chat Application with FLutter
 
 ## Getting Started
 
