@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confab/models/user.dart';
@@ -168,7 +169,11 @@ class ChatRoomsTile extends StatelessWidget {
               '',
               child: profilePhoto != null
                   ? FittedBox(
-                      child: Image.network(profilePhoto),
+                      child: CachedNetworkImage(
+                                placeholder: (context, url) =>
+                                    CircularProgressIndicator(),
+                                imageUrl: profilePhoto,
+                              ),
                       fit: BoxFit.fill,
                     )
                   : Icon(Icons.person, size: 20),

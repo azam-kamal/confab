@@ -11,6 +11,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../services/downloads.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+import 'imageViewer.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -24,24 +28,6 @@ class Chat extends StatefulWidget {
 
 String roomId;
 
-//Download progressbar widget
-String _progress = "-";
-Widget progressBar() {
-  return Center(
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        Text(
-          'Download progress:',
-        ),
-        Text(
-          '$_progress',
-        ),
-      ],
-    ),
-  );
-}
-
 class _ChatState extends State<Chat> {
   Stream<QuerySnapshot> chats;
 
@@ -49,7 +35,6 @@ class _ChatState extends State<Chat> {
   ScrollController _scrollController = ScrollController();
   bool isLoading = false;
   Widget chatMessages() {
-    //   final items = List<String>.generate(50, (i) => "Item $i");
     return StreamBuilder(
       stream: chats,
       builder: (context, snapshot) {
@@ -64,8 +49,18 @@ class _ChatState extends State<Chat> {
                     if (snapshot.data.documents[index].data["type"] ==
                         'image') {
                       return MessageTile(
-                          attachment: Image.network(snapshot
-                              .data.documents[index].data["attachment"]),
+                          attachment: InkWell(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ImageViewer(snapshot.data.documents[index].data["attachment"]))),
+                            child: CachedNetworkImage(
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              imageUrl: snapshot
+                                  .data.documents[index].data["attachment"],
+                            ),
+                          ),
                           sendByMe: Constants.myName ==
                               snapshot.data.documents[index].data["sendBy"],
                           chatTime:
@@ -73,15 +68,30 @@ class _ChatState extends State<Chat> {
                     } else if (snapshot.data.documents[index].data["type"] ==
                         'video') {
                       return MessageTile(
-                          attachment: IconButton(
-                              icon: Icon(Icons.play_arrow),
-                              iconSize: 40,
-                              onPressed: () => download(
-                                  snapshot
-                                      .data.documents[index].data["attachment"],
-                                  DateFormat('ddmmyy')
-                                      .format(DateTime.now())
-                                      .toString())),
+                          attachment: Column(
+                            children: [
+                              IconButton(
+                                  icon: Icon(
+                                    Icons.play_arrow,
+                                    color: Colors.white,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: () => download(
+                                          snapshot.data.documents[index]
+                                              .data["attachment"],
+                                          DateFormat('ddmmyy')
+                                              .format(DateTime.now())
+                                              .toString())
+                                      .then((value) => InfoBgAlertBox(
+                                          context: context,
+                                          title: 'Download',
+                                          buttonText: 'Ok',
+                                          infoMessage:
+                                              'File has being downloaded into download directory'))),
+                              Text('Video',
+                                  style: TextStyle(fontWeight: FontWeight.bold))
+                            ],
+                          ),
                           sendByMe: Constants.myName ==
                               snapshot.data.documents[index].data["sendBy"],
                           chatTime:
@@ -89,26 +99,35 @@ class _ChatState extends State<Chat> {
                     } else if (snapshot.data.documents[index].data["type"] ==
                         'other') {
                       return MessageTile(
-                          attachment: IconButton(
-                              icon: Icon(Icons.file_copy),
-                              iconSize: 40,
-                              onPressed: () => download(
-                                  snapshot
-                                      .data.documents[index].data["attachment"],
-                                  DateFormat('ddmmyy')
-                                      .format(DateTime.now())
-                                      .toString())),
+                          attachment: Column(
+                            children: [
+                              IconButton(
+                                  icon: Icon(
+                                    Icons.file_copy,
+                                    color: Colors.white,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: () => download(
+                                          snapshot.data.documents[index]
+                                              .data["attachment"],
+                                          DateFormat('ddmmyy')
+                                              .format(DateTime.now())
+                                              .toString())
+                                      .then((value) => InfoBgAlertBox(
+                                          context: context,
+                                          title: 'Download',
+                                          buttonText: 'Ok',
+                                          infoMessage:
+                                              'File has being downloaded into download directory'))),
+                              Text('File',
+                                  style: TextStyle(fontWeight: FontWeight.bold))
+                            ],
+                          ),
                           sendByMe: Constants.myName ==
                               snapshot.data.documents[index].data["sendBy"],
                           chatTime:
                               snapshot.data.documents[index].data["chatTime"]);
                     }
-                    // return MessageTile(
-                    //     attachment:
-                    //         snapshot.data.documents[index].data["attachment"],
-                    //     sendByMe: Constants.myName ==
-                    //         snapshot.data.documents[index].data["sendBy"],
-                    //     chatTime: snapshot.data.documents[index].data["time"]);
                   } else {
                     return MessageTile(
                         message: snapshot.data.documents[index].data["message"],
@@ -254,15 +273,6 @@ class _ChatState extends State<Chat> {
         });
   }
 
-  // Downloading Progress
-  void _onReceiveProgress(int received, int total) {
-    if (total != -1) {
-      setState(() {
-        _progress = (received / total * 100).toStringAsFixed(0) + "%";
-      });
-    }
-  }
-
 //File Code --- /////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
@@ -289,7 +299,11 @@ class _ChatState extends State<Chat> {
               child: widget.profilePhoto == null
                   ? Icon(Icons.person, size: 20)
                   : FittedBox(
-                      child: Image.network(widget.profilePhoto),
+                      child: CachedNetworkImage(
+                        placeholder: (context, url) =>
+                            CircularProgressIndicator(),
+                        imageUrl: widget.profilePhoto,
+                      ),
                       fit: BoxFit.fill),
               borderColor: Colors.blueAccent,
               borderWidth: 4,

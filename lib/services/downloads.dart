@@ -43,9 +43,11 @@ Future<void> download(String fileUrl, String fileName) async {
   final isPermissionStatusGranted = await _requestPermissions();
 
   if (isPermissionStatusGranted) {
-    final savePath = path.join(dir.path, fileName+ext);
-    await _startDownload(fileUrl, savePath)
-        .then((value) => print('Download Complete!'));
+    final savePath = path.join(dir.path, fileName + ext);
+    await _startDownload(fileUrl, savePath).then((value) {
+      print('Download Complete!');
+      
+    });
   } else {
     // handle the scenario when user declines the permissions
   }
