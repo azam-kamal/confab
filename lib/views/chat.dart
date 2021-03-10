@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:get/get.dart';
+import 'package:video_thumbnail_generator/video_thumbnail_generator.dart';
 import '../helper/constants.dart';
 import '../services/database.dart';
 import '../widget/widget.dart';
@@ -13,8 +13,8 @@ import '../services/downloads.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
 import 'imageViewer.dart';
+import 'videoViewer.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -53,7 +53,10 @@ class _ChatState extends State<Chat> {
                             onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => ImageViewer(snapshot.data.documents[index].data["attachment"]))),
+                                    builder: (context) => ImageViewer(snapshot
+                                        .data
+                                        .documents[index]
+                                        .data["attachment"]))),
                             child: CachedNetworkImage(
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
@@ -68,29 +71,35 @@ class _ChatState extends State<Chat> {
                     } else if (snapshot.data.documents[index].data["type"] ==
                         'video') {
                       return MessageTile(
-                          attachment: Column(
-                            children: [
-                              IconButton(
-                                  icon: Icon(
-                                    Icons.play_arrow,
-                                    color: Colors.white,
+                          attachment: InkWell(
+                            onTap: () {
+                              Navigator.push(context,MaterialPageRoute(
+                                builder: (context) =>
+                                VideoViewer(snapshot.data.documents[index].data["attachment"])));
+                            },
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  child: ThumbnailImage(
+                                    videoUrl: snapshot.data.documents[index]
+                                        .data["attachment"],
+                                    width: 200,
+                                    height: 200,
                                   ),
-                                  iconSize: 40,
-                                  onPressed: () => download(
-                                          snapshot.data.documents[index]
-                                              .data["attachment"],
-                                          DateFormat('ddmmyy')
-                                              .format(DateTime.now())
-                                              .toString())
-                                      .then((value) => InfoBgAlertBox(
-                                          context: context,
-                                          title: 'Download',
-                                          buttonText: 'Ok',
-                                          infoMessage:
-                                              'File has being downloaded into download directory'))),
-                              Text('Video',
-                                  style: TextStyle(fontWeight: FontWeight.bold))
-                            ],
+                                ),
+                                Positioned(
+                                    top: 50,
+                                    left: 50,
+                                    bottom: 50,
+                                    right: 50,
+                                    child: Center(
+                                        child: Icon(
+                                      Icons.play_circle_outline_rounded,
+                                      size: 100,
+                                      color: Colors.blue[300],
+                                    ))),
+                              ],
+                            ),
                           ),
                           sendByMe: Constants.myName ==
                               snapshot.data.documents[index].data["sendBy"],
@@ -179,7 +188,6 @@ class _ChatState extends State<Chat> {
     file = await FilePicker.getFile(type: fileType);
     print(file);
     uploadFileOnStorage(fileType.toString().substring(9));
-    Get.snackbar('', 'Sending attachment..');
     Navigator.of(ctx).pop();
 
     // GradientSnackBar.showMessage(context, 'Sending attachment..');
@@ -195,7 +203,8 @@ class _ChatState extends State<Chat> {
       'xlx',
       'xlxs',
       'ppt',
-      'pptx'
+      'pptx',
+      'mp3'
     ]);
     uploadFileOnStorage('other');
     Navigator.of(ctx).pop();

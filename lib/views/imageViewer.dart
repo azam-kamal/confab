@@ -10,23 +10,26 @@ class ImageViewer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-              child: Container(
-         // margin: EdgeInsets.all(20),
-          child: CachedNetworkImage(
-            placeholder: (context, url) => CircularProgressIndicator(),
-            imageUrl: image,
-          ),
+      appBar: AppBar(
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () async {
+              Navigator.of(context).pop();
+            }),
+        title: Row(
+          children: [
+            Text('Image'),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
+            Icon(Icons.image, size: 20),
+          ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(
-          Icons.arrow_back_ios,
-          size: 30,
+      body: Container(
+        // margin: EdgeInsets.all(20),
+        child: CachedNetworkImage(
+          placeholder: (context, url) => CircularProgressIndicator(),
+          imageUrl: image,
         ),
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
       ),
     );
   }

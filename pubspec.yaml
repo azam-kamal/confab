@@ -42,10 +42,6 @@ dependencies:
   #Attachment deps
   file_picker:
   emoji_picker: ^0.0.2
-  video_player: ^0.10.2+1
-  flutter_downloader: ^1.2.2
-  flushbar: ^1.9.0
-  get: ^3.26.0
   dio: ^3.0.10
   path_provider: ^1.6.5
   downloads_path_provider_28: ^0.1.0
@@ -53,6 +49,9 @@ dependencies:
   open_file: ^3.0.1
   flutter_awesome_alert_box: ^1.0.1
   cached_network_image: ^2.5.1
+  video_thumbnail_generator: ^0.0.8
+  chewie: ^0.12.2
+  video_player: ^1.0.1
     
   
   # intl: ^0.16.1

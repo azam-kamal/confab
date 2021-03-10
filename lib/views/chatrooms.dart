@@ -6,13 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../helper/authenticate.dart';
 import '../helper/constants.dart';
 import '../helper/helperfunctions.dart';
-import '../helper/theme.dart';
 import '../services/auth.dart';
 import '../services/database.dart';
 import '../views/chat.dart';
 import '../views/search.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
 
 class ChatRoom extends StatefulWidget {
   @override
