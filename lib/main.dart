@@ -1,3 +1,4 @@
+import 'package:flutter_downloader/flutter_downloader.dart';
 import 'helper/authenticate.dart';
 import 'helper/helperfunctions.dart';
 import 'views/chatrooms.dart';
@@ -6,7 +7,10 @@ import 'package:sizer/sizer.dart';
 import 'package:provider/provider.dart';
 import 'models/user.dart';
 
-void main() {
+const debug = true;
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+await FlutterDownloader.initialize(debug: debug);
   runApp(MyApp());
 }
 

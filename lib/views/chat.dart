@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:get/get.dart';
 import '../helper/constants.dart';
 import '../services/database.dart';
 import '../widget/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:sizer/sizer.dart';
+import '../services/downloads.dart';
+import 'package:intl/intl.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -17,12 +22,32 @@ class Chat extends StatefulWidget {
   _ChatState createState() => _ChatState();
 }
 
+String roomId;
+
+//Download progressbar widget
+String _progress = "-";
+Widget progressBar() {
+  return Center(
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          'Download progress:',
+        ),
+        Text(
+          '$_progress',
+        ),
+      ],
+    ),
+  );
+}
+
 class _ChatState extends State<Chat> {
   Stream<QuerySnapshot> chats;
 
   TextEditingController messageEditingController = new TextEditingController();
   ScrollController _scrollController = ScrollController();
-
+  bool isLoading = false;
   Widget chatMessages() {
     //   final items = List<String>.generate(50, (i) => "Item $i");
     return StreamBuilder(
@@ -34,26 +59,81 @@ class _ChatState extends State<Chat> {
                 controller: _scrollController,
                 itemCount: snapshot.data.documents.length,
                 itemBuilder: (context, index) {
-                  return MessageTile(
-                    message: snapshot.data.documents[index].data["message"],
-                    sendByMe: Constants.myName ==
-                        snapshot.data.documents[index].data["sendBy"],
-                  );
+                  if (snapshot.data.documents[index].data["attachment"] !=
+                      null) {
+                    if (snapshot.data.documents[index].data["type"] ==
+                        'image') {
+                      return MessageTile(
+                          attachment: Image.network(snapshot
+                              .data.documents[index].data["attachment"]),
+                          sendByMe: Constants.myName ==
+                              snapshot.data.documents[index].data["sendBy"],
+                          chatTime:
+                              snapshot.data.documents[index].data["chatTime"]);
+                    } else if (snapshot.data.documents[index].data["type"] ==
+                        'video') {
+                      return MessageTile(
+                          attachment: IconButton(
+                              icon: Icon(Icons.play_arrow),
+                              iconSize: 40,
+                              onPressed: () => download(
+                                  snapshot
+                                      .data.documents[index].data["attachment"],
+                                  DateFormat('ddmmyy')
+                                      .format(DateTime.now())
+                                      .toString())),
+                          sendByMe: Constants.myName ==
+                              snapshot.data.documents[index].data["sendBy"],
+                          chatTime:
+                              snapshot.data.documents[index].data["chatTime"]);
+                    } else if (snapshot.data.documents[index].data["type"] ==
+                        'other') {
+                      return MessageTile(
+                          attachment: IconButton(
+                              icon: Icon(Icons.file_copy),
+                              iconSize: 40,
+                              onPressed: () => download(
+                                  snapshot
+                                      .data.documents[index].data["attachment"],
+                                  DateFormat('ddmmyy')
+                                      .format(DateTime.now())
+                                      .toString())),
+                          sendByMe: Constants.myName ==
+                              snapshot.data.documents[index].data["sendBy"],
+                          chatTime:
+                              snapshot.data.documents[index].data["chatTime"]);
+                    }
+                    // return MessageTile(
+                    //     attachment:
+                    //         snapshot.data.documents[index].data["attachment"],
+                    //     sendByMe: Constants.myName ==
+                    //         snapshot.data.documents[index].data["sendBy"],
+                    //     chatTime: snapshot.data.documents[index].data["time"]);
+                  } else {
+                    return MessageTile(
+                        message: snapshot.data.documents[index].data["message"],
+                        sendByMe: Constants.myName ==
+                            snapshot.data.documents[index].data["sendBy"],
+                        chatTime:
+                            snapshot.data.documents[index].data["chatTime"]);
+                  }
                 })
             : Container();
-            
       },
     );
   }
 
   addMessage() {
     if (messageEditingController.text.isNotEmpty) {
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('dd MMMM-kk:mm').format(now);
       Map<String, dynamic> chatMessageMap = {
         "sendBy": Constants.myName,
         "message": messageEditingController.text,
+        'chatTime': formattedDate,
         'time': DateTime.now().millisecondsSinceEpoch,
       };
-
+      print(DateFormat.yMMMMd('en_US').add_Hm());
       DatabaseMethods().addMessage(widget.chatRoomId, chatMessageMap);
 
       setState(() {
@@ -64,6 +144,7 @@ class _ChatState extends State<Chat> {
 
   @override
   void initState() {
+    roomId = widget.chatRoomId;
     DatabaseMethods().getChats(widget.chatRoomId).then((val) {
       setState(() {
         chats = val;
@@ -71,15 +152,125 @@ class _ChatState extends State<Chat> {
     });
     super.initState();
   }
+// File Code/////////////////////////////////////////////
 
+  File file;
+
+  imageAndVideoPicker(FileType fileType, BuildContext ctx) async {
+    file = await FilePicker.getFile(type: fileType);
+    print(file);
+    uploadFileOnStorage(fileType.toString().substring(9));
+    Get.snackbar('', 'Sending attachment..');
+    Navigator.of(ctx).pop();
+
+    // GradientSnackBar.showMessage(context, 'Sending attachment..');
+  }
+
+  pdfAndRarPicker(FileType fileType, BuildContext ctx) async {
+    file = await FilePicker.getFile(type: fileType, allowedExtensions: [
+      'pdf',
+      'svg',
+      'doc',
+      'docx',
+      'rar',
+      'xlx',
+      'xlxs',
+      'ppt',
+      'pptx'
+    ]);
+    uploadFileOnStorage('other');
+    Navigator.of(ctx).pop();
+  }
+
+//////////////
+  addAttachment(String url, String fileType) {
+    if (file != null) {
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('dd MMMM-kk:mm').format(now);
+      Map<String, dynamic> chatMessageMap = {
+        "sendBy": Constants.myName,
+        "message": '',
+        'chatTime': formattedDate,
+        'time': DateTime.now().millisecondsSinceEpoch,
+        'attachment': url,
+        'type': fileType
+      };
+      print(DateFormat.yMMMMd('en_US').add_Hm());
+      DatabaseMethods().addMessage(roomId, chatMessageMap);
+    }
+  }
+
+//Firestorage Code
+  Future uploadFileOnStorage(String fileType) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    StorageReference storageReference =
+        FirebaseStorage.instance.ref().child('chatAttachments/${(file)}}');
+    //.child('profilePictures/${Path.basename(_image.path)}}');
+    StorageUploadTask uploadTask = storageReference.putFile(file);
+    await uploadTask.onComplete;
+    print('File Uploaded');
+    storageReference.getDownloadURL().then((fileURL) {
+      //updateFileURL(fileURL);
+      addAttachment(fileURL, fileType);
+      print('file URL :' + fileURL);
+      setState(() {
+        //  _uploadedFileURL = fileURL;
+        isLoading = false;
+      });
+    });
+  }
+
+  ///
+//Attachment Code:
+
+  showAttachmentBottomSheet(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            child: Wrap(
+              children: <Widget>[
+                ListTile(
+                    leading: Icon(
+                      Icons.image,
+                    ),
+                    title: Text('Image'),
+                    onTap: () => imageAndVideoPicker(FileType.image, context)),
+                ListTile(
+                    leading: Icon(Icons.videocam),
+                    title: Text('Video'),
+                    onTap: () => imageAndVideoPicker(FileType.video, context)),
+                ListTile(
+                  leading: Icon(Icons.insert_drive_file),
+                  title: Text('File'),
+                  onTap: () => pdfAndRarPicker(FileType.custom, context),
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
+  // Downloading Progress
+  void _onReceiveProgress(int received, int total) {
+    if (total != -1) {
+      setState(() {
+        _progress = (received / total * 100).toStringAsFixed(0) + "%";
+      });
+    }
+  }
+
+//File Code --- /////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
     print(widget.profilePhoto);
-    Timer(
-      Duration(milliseconds: 100),
-      () =>
-          _scrollController.jumpTo(_scrollController.position.maxScrollExtent),
-    );
+    Timer(Duration(milliseconds: 1000), () {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      print(widget.profilePhoto);
+    });
     String userNameUpdated =
         widget.userName[0].toUpperCase() + widget.userName.substring(1);
     String titleText = userNameUpdated;
@@ -95,11 +286,11 @@ class _ChatState extends State<Chat> {
           children: [
             CircularProfileAvatar(
               '',
-              child: widget.profilePhoto != null
-                  ? FittedBox(
+              child: widget.profilePhoto == null
+                  ? Icon(Icons.person, size: 20)
+                  : FittedBox(
                       child: Image.network(widget.profilePhoto),
-                      fit: BoxFit.fill)
-                  : Icon(Icons.person, size: 50),
+                      fit: BoxFit.fill),
               borderColor: Colors.blueAccent,
               borderWidth: 4,
               elevation: 7,
@@ -121,9 +312,16 @@ class _ChatState extends State<Chat> {
               width: MediaQuery.of(context).size.width,
               child: Container(
                 color: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   children: [
+                    IconButton(
+                      icon: Icon(Icons.attach_file),
+                      onPressed: () {
+                        showAttachmentBottomSheet(context);
+                      },
+                    ),
+                    // Icon(Icons.),
                     Expanded(
                         child: TextField(
                       //autofocus: true,
@@ -166,8 +364,14 @@ class _ChatState extends State<Chat> {
 class MessageTile extends StatelessWidget {
   final String message;
   final bool sendByMe;
+  final attachment;
+  final chatTime;
 
-  MessageTile({@required this.message, @required this.sendByMe});
+  MessageTile(
+      {this.message,
+      @required this.sendByMe,
+      @required this.chatTime,
+      this.attachment});
 
   @override
   Widget build(BuildContext context) {
@@ -189,20 +393,33 @@ class MessageTile extends StatelessWidget {
                   topLeft: Radius.circular(23),
                   topRight: Radius.circular(23),
                   bottomRight: Radius.circular(23)),
-          // gradient: LinearGradient(
-          //   colors: sendByMe
-          //       ? [const Color(0xff007EF4), const Color(0xff2A75BC)]
-          //       : [const Color(0x1AFFFFFF), const Color(0x1AFFFFFF)],
-          // )
           color: sendByMe ? Colors.blue : Colors.green,
         ),
-        child: Text(message,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-                color: Colors.black,
-                fontSize: 22,
-                fontFamily: 'OverpassRegular',
-                fontWeight: FontWeight.w300)),
+        child: Column(
+          children: [
+            message == null
+                ? FittedBox(
+                    child: attachment,
+                    fit: BoxFit.contain,
+                  )
+                : Text(message,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontFamily: 'OverpassRegular',
+                        fontWeight: FontWeight.w300)),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+            Text(chatTime == null ? '00:00' : chatTime.toString(),
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontFamily: 'OverpassRegular',
+                  //fontWeight: FontWeight.w300
+                )),
+          ],
+        ),
       ),
     );
   }

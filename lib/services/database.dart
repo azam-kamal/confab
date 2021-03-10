@@ -73,6 +73,18 @@ class DatabaseMethods {
     });
   }
 
+  //2
+  // Future<void> addMessage(String chatRoomId, chatMessageData) async {
+  //   Firestore.instance
+  //       .collection("chatRoom")
+  //       .document(chatRoomId)
+  //       .collection("chats").document((await FirebaseAuth.instance.currentUser()).uid).setData(chatMessageData)
+  //       .catchError((e) {
+  //     print(e.toString());
+  //   });
+  // }
+  
+
   getUserChats(String itIsMyName) async {
     return await Firestore.instance
         .collection("chatRoom")

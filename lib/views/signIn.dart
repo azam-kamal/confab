@@ -7,6 +7,7 @@ import '../views/forgot_password.dart';
 import '../widget/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
 
 class SignIn extends StatefulWidget {
   final Function toggleView;
@@ -62,7 +63,7 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    //  resizeToAvoidBottomInset: false,
+      //  resizeToAvoidBottomInset: false,
       //appBar: appBarMain(context),
       body: isLoading
           ? Container(
@@ -70,27 +71,27 @@ class _SignInState extends State<SignIn> {
             )
           : SingleChildScrollView(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 4.0.h),
                 child: Column(
                   children: [
                     //Spacer(),
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.1,
+                      height: 10.0.h,
                     ),
                     Icon(
                       Icons.chat,
-                      size: MediaQuery.of(context).size.height * 0.15,
+                      size: 15.0.h,
                       color: ThemeData().primaryColor,
                     ),
                     Text(
                       'Confab',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 20.0,
+                          fontSize: 15.0.sp,
                           color: Colors.black),
                     ),
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.05,
+                      height: 5.0.h,
                     ),
                     Form(
                       key: formKey,
@@ -113,7 +114,7 @@ class _SignInState extends State<SignIn> {
                             validator: (val) {
                               return val.length > 6
                                   ? null
-                                  : "Enter Password 6+ characters";
+                                  : "Password must contain 6+ characters";
                             },
                             style: simpleTextStyle(),
                             controller: passwordEditingController,
@@ -123,7 +124,7 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                     SizedBox(
-                      height: 16,
+                      height: 2.0.h,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -137,7 +138,7 @@ class _SignInState extends State<SignIn> {
                           },
                           child: Container(
                               padding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
+                                  horizontal: 3.0.h, vertical: 1.0.h),
                               child: Text(
                                 "Forgot Password?",
                                 style: simpleTextStyle(),
@@ -146,14 +147,14 @@ class _SignInState extends State<SignIn> {
                       ],
                     ),
                     SizedBox(
-                      height: 16,
+                      height: 2.0.h,
                     ),
                     GestureDetector(
                       onTap: () {
                         signIn();
                       },
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(vertical: 2.5.h),
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
                             gradient: LinearGradient(
@@ -171,10 +172,10 @@ class _SignInState extends State<SignIn> {
                       ),
                     ),
                     SizedBox(
-                      height: 16,
+                      height: 2.0.h,
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(vertical: 2.5.h),
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
                           color: Colors.blueGrey[300]),
@@ -184,20 +185,21 @@ class _SignInState extends State<SignIn> {
                         children: [
                           Image.asset(
                             'assets/images/google_logo.png',
-                            height: 20,
+                            height: 3.5.h,
                           ),
-                          SizedBox(width: 10),
+                          SizedBox(width: 3.0.w),
                           Text(
                             "Sign In with Google",
                             style: TextStyle(
-                                fontSize: 17, color: CustomTheme.textColor),
+                                fontSize: 14.0.sp,
+                                color: CustomTheme.textColor),
                             textAlign: TextAlign.center,
                           ),
                         ],
                       ),
                     ),
                     SizedBox(
-                      height: 16,
+                      height: 4.0.h,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -214,15 +216,15 @@ class _SignInState extends State<SignIn> {
                             "Register now",
                             style: TextStyle(
                                 color: Colors.black,
-                                fontSize: 16,
+                                fontSize: 14.0.sp,
                                 decoration: TextDecoration.underline),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(
-                      height: 50,
-                    )
+                    // SizedBox(
+                    //   height: 50.0.h,
+                    // )
                   ],
                 ),
               ),
