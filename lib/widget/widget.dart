@@ -19,7 +19,7 @@ InputDecoration textFieldInputDecoration(String hintText) {
 }
 
 TextStyle simpleTextStyle() {
-  return TextStyle(color: Colors.black, fontSize: 16);
+  return TextStyle(color: Colors.black, fontSize: 20);
 }
 
 TextStyle biggerTextStyle() {

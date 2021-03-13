@@ -23,10 +23,10 @@ class _ImagePickScreenState extends State<ImagePickScreen> {
   bool isLoading = false;
 
   Future<void> updateImage(String dpURL) async {
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection('users')
-        .document((await FirebaseAuth.instance.currentUser()).uid)
-        .updateData({'profilePhoto': dpURL});
+        .doc(FirebaseAuth.instance.currentUser.uid)
+        .update({'profilePhoto': dpURL});
   }
 
 //Firestorage Code
@@ -35,11 +35,11 @@ class _ImagePickScreenState extends State<ImagePickScreen> {
       isLoading = true;
     });
 
-    StorageReference storageReference = FirebaseStorage.instance
+    Reference storageReference = FirebaseStorage.instance
         .ref()
         .child('profilePictures/${Path.basename(_image.path)}}');
-    StorageUploadTask uploadTask = storageReference.putFile(_image);
-    await uploadTask.onComplete;
+    UploadTask uploadTask = storageReference.putFile(_image);
+    await uploadTask;
     print('File Uploaded');
     storageReference.getDownloadURL().then((fileURL) {
       updateImage(fileURL);

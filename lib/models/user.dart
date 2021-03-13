@@ -49,9 +49,9 @@ class Users with ChangeNotifier {
   }
 }
 
-class User {
+class Userr {
   final String uid;
-  User({this.uid});
+  Userr({this.uid});
 }
 
 class Video {

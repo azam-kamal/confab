@@ -33,7 +33,12 @@ class _ChatState extends State<Chat> {
 
   TextEditingController messageEditingController = new TextEditingController();
   ScrollController _scrollController = ScrollController();
+  _scrollToBottom() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
+
   bool isLoading = false;
+  bool sc = false;
   Widget chatMessages() {
     return StreamBuilder(
       stream: chats,
@@ -41,50 +46,50 @@ class _ChatState extends State<Chat> {
         return snapshot.hasData
             ? ListView.builder(
                 //reverse: true,
-                controller: _scrollController,
-                itemCount: snapshot.data.documents.length,
+                //controller: _scrollController,
+                itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
-                  if (snapshot.data.documents[index].data["attachment"] !=
-                      null) {
-                    if (snapshot.data.documents[index].data["type"] ==
-                        'image') {
+                  if (snapshot.data.docs[index].data()["attachment"] != null) {
+                    if (snapshot.data.docs[index].data()["type"] == 'image') {
                       return MessageTile(
                           attachment: InkWell(
                             onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => ImageViewer(snapshot
-                                        .data
-                                        .documents[index]
-                                        .data["attachment"]))),
+                                        .data.docs[index]
+                                        .data()["attachment"]))),
                             child: CachedNetworkImage(
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
-                              imageUrl: snapshot
-                                  .data.documents[index].data["attachment"],
+                              imageUrl: snapshot.data.docs[index]
+                                  .data()["attachment"],
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.documents[index].data["sendBy"],
+                              snapshot.data.docs[index].data()["sendBy"],
                           chatTime:
-                              snapshot.data.documents[index].data["chatTime"]);
-                    } else if (snapshot.data.documents[index].data["type"] ==
+                              snapshot.data.docs[index].data()["chatTime"]);
+                    } else if (snapshot.data.docs[index].data()["type"] ==
                         'video') {
                       return MessageTile(
                           attachment: InkWell(
                             onTap: () {
-                              Navigator.push(context,MaterialPageRoute(
-                                builder: (context) =>
-                                VideoViewer(snapshot.data.documents[index].data["attachment"])));
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => VideoViewer(snapshot
+                                          .data.docs[index]
+                                          .data()["attachment"])));
                             },
                             child: Stack(
                               children: [
                                 Positioned(
                                   child: ThumbnailImage(
-                                    videoUrl: snapshot.data.documents[index]
-                                        .data["attachment"],
-                                    width: 200,
-                                    height: 200,
+                                    videoUrl: snapshot.data.docs[index]
+                                        .data()["attachment"],
+                                    width: 250,
+                                    height: 150,
                                   ),
                                 ),
                                 Positioned(
@@ -102,10 +107,10 @@ class _ChatState extends State<Chat> {
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.documents[index].data["sendBy"],
+                              snapshot.data.docs[index].data()["sendBy"],
                           chatTime:
-                              snapshot.data.documents[index].data["chatTime"]);
-                    } else if (snapshot.data.documents[index].data["type"] ==
+                              snapshot.data.docs[index].data()["chatTime"]);
+                    } else if (snapshot.data.docs[index].data()["type"] ==
                         'other') {
                       return MessageTile(
                           attachment: Column(
@@ -117,7 +122,7 @@ class _ChatState extends State<Chat> {
                                   ),
                                   iconSize: 40,
                                   onPressed: () => download(
-                                          snapshot.data.documents[index]
+                                          snapshot.data.docs[index]
                                               .data["attachment"],
                                           DateFormat('ddmmyy')
                                               .format(DateTime.now())
@@ -133,20 +138,20 @@ class _ChatState extends State<Chat> {
                             ],
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.documents[index].data["sendBy"],
+                              snapshot.data.docs[index].data()["sendBy"],
                           chatTime:
-                              snapshot.data.documents[index].data["chatTime"]);
+                              snapshot.data.docs[index].data()["chatTime"]);
                     }
                   } else {
                     return MessageTile(
-                        message: snapshot.data.documents[index].data["message"],
+                        message: snapshot.data.docs[index].data()["message"],
                         sendByMe: Constants.myName ==
-                            snapshot.data.documents[index].data["sendBy"],
-                        chatTime:
-                            snapshot.data.documents[index].data["chatTime"]);
+                            snapshot.data.docs[index].data()["sendBy"],
+                        chatTime: snapshot.data.docs[index].data()["chatTime"]);
                   }
+                  // _scrollToBottom();
                 })
-            : Container();
+            : CircularProgressIndicator();
       },
     );
   }
@@ -234,11 +239,11 @@ class _ChatState extends State<Chat> {
       isLoading = true;
     });
 
-    StorageReference storageReference =
+    Reference storageReference =
         FirebaseStorage.instance.ref().child('chatAttachments/${(file)}}');
     //.child('profilePictures/${Path.basename(_image.path)}}');
-    StorageUploadTask uploadTask = storageReference.putFile(file);
-    await uploadTask.onComplete;
+    UploadTask uploadTask = storageReference.putFile(file);
+    await uploadTask;
     print('File Uploaded');
     storageReference.getDownloadURL().then((fileURL) {
       //updateFileURL(fileURL);
@@ -285,14 +290,15 @@ class _ChatState extends State<Chat> {
 //File Code --- /////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
-    print(widget.profilePhoto);
-    Timer(Duration(milliseconds: 1000), () {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      print(widget.profilePhoto);
-    });
+    // _scrollController.animateTo(
+    //   _scrollController.position.maxScrollExtent,
+    //   curve: Curves.easeOut,
+    //   duration: const Duration(milliseconds: 500),
+    // );
     String userNameUpdated =
         widget.userName[0].toUpperCase() + widget.userName.substring(1);
     String titleText = userNameUpdated;
+    // WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     return Scaffold(
       //appBar: appBarMain(context),
       appBar: AppBar(
@@ -344,6 +350,13 @@ class _ChatState extends State<Chat> {
                         showAttachmentBottomSheet(context);
                       },
                     ),
+                    IconButton(
+                      icon: Icon(Icons.emoji_emotions_outlined),
+                      onPressed: () {
+                        showAttachmentBottomSheet(context);
+                      },
+                    ),
+
                     // Icon(Icons.),
                     Expanded(
                         child: TextField(
@@ -399,51 +412,102 @@ class MessageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-          top: 8, bottom: 8, left: sendByMe ? 0 : 24, right: sendByMe ? 24 : 0),
-      alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin:
-            sendByMe ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
-        decoration: BoxDecoration(
-          borderRadius: sendByMe
-              ? BorderRadius.only(
-                  topLeft: Radius.circular(23),
-                  topRight: Radius.circular(23),
-                  bottomLeft: Radius.circular(23))
-              : BorderRadius.only(
-                  topLeft: Radius.circular(23),
-                  topRight: Radius.circular(23),
-                  bottomRight: Radius.circular(23)),
-          color: sendByMe ? Colors.blue : Colors.green,
-        ),
-        child: Column(
-          children: [
-            message == null
-                ? FittedBox(
-                    child: attachment,
-                    fit: BoxFit.contain,
-                  )
-                : Text(message,
-                    textAlign: TextAlign.start,
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontFamily: 'OverpassRegular',
-                        fontWeight: FontWeight.w300)),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            Text(chatTime == null ? '00:00' : chatTime.toString(),
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 8,
-                  fontFamily: 'OverpassRegular',
-                  //fontWeight: FontWeight.w300
-                )),
-          ],
-        ),
-      ),
-    );
+        padding: EdgeInsets.only(
+            top: 8,
+            bottom: 8,
+            left: sendByMe ? 0 : 24,
+            right: sendByMe ? 24 : 0),
+        alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
+        child: attachment == null
+            ? Container(
+                margin: sendByMe
+                    ? EdgeInsets.only(left: 30)
+                    : EdgeInsets.only(right: 30),
+                padding:
+                    EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
+                decoration: BoxDecoration(
+                  borderRadius: sendByMe
+                      ? BorderRadius.only(
+                          topLeft: Radius.circular(23),
+                          topRight: Radius.circular(23),
+                          bottomLeft: Radius.circular(23))
+                      : BorderRadius.only(
+                          topLeft: Radius.circular(23),
+                          topRight: Radius.circular(23),
+                          bottomRight: Radius.circular(23)),
+                  color: sendByMe ? Colors.lightBlueAccent : Colors.green,
+                ),
+                child: Column(
+                  children: [
+                    message == null
+                        ? FittedBox(
+                            child: attachment,
+                            fit: BoxFit.contain,
+                          )
+                        : Text(message,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontFamily: 'OverpassRegular',
+                                fontWeight: FontWeight.w300)),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Text(chatTime == null ? '00:00' : chatTime.toString(),
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontFamily: 'OverpassRegular',
+                          //fontWeight: FontWeight.w300
+                        )),
+                  ],
+                ),
+              )
+            :
+            //For Attachment
+            Container(
+                margin: sendByMe
+                    ? EdgeInsets.only(left: 30)
+                    : EdgeInsets.only(right: 30),
+                padding:
+                    EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
+                decoration: BoxDecoration(
+                  borderRadius: sendByMe
+                      ? BorderRadius.only(
+                          topLeft: Radius.circular(23),
+                          topRight: Radius.circular(23),
+                          bottomLeft: Radius.circular(23))
+                      : BorderRadius.only(
+                          topLeft: Radius.circular(23),
+                          topRight: Radius.circular(23),
+                          bottomRight: Radius.circular(23)),
+                  color: sendByMe ? Colors.lightBlueAccent : Colors.green,
+                ),
+                child: Column(
+                  children: [
+                    message == null
+                        ? FittedBox(
+                            child: attachment,
+                            fit: BoxFit.contain,
+                          )
+                        : Text(message,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontFamily: 'OverpassRegular',
+                                fontWeight: FontWeight.w300)),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+                    Text(chatTime == null ? '00:00' : chatTime.toString(),
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontFamily: 'OverpassRegular',
+                          //fontWeight: FontWeight.w300
+                        )),
+                  ],
+                ),
+              ));
   }
 }

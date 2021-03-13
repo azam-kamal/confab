@@ -1,24 +1,22 @@
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
-import 'package:confab/helper/authenticate.dart';
-import 'package:confab/services/auth.dart';
-import 'package:confab/views/allPeopleView.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
-import 'package:sizer/sizer.dart';
-import '../helper/constants.dart';
-import '../services/database.dart';
-import '../views/chat.dart';
-import '../widget/widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:confab/helper/constants.dart';
+import 'package:confab/services/database.dart';
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
 
+import 'chat.dart';
 import 'chatrooms.dart';
 
-class Search extends StatefulWidget {
+class AllPeopleView extends StatefulWidget {
+  AllPeopleView({Key key}) : super(key: key);
+
   @override
-  _SearchState createState() => _SearchState();
+  _AllPeopleViewState createState() => _AllPeopleViewState();
 }
 
-class _SearchState extends State<Search> {
+class _AllPeopleViewState extends State<AllPeopleView> {
   DatabaseMethods databaseMethods = new DatabaseMethods();
   TextEditingController searchEditingController = new TextEditingController();
   QuerySnapshot searchResultSnapshot;
@@ -34,24 +32,6 @@ class _SearchState extends State<Search> {
         haveUserSearched = true;
       });
     });
-  }
-
-  initiateSearch() async {
-    if (searchEditingController.text.isNotEmpty) {
-      setState(() {
-        isLoading = true;
-      });
-      await databaseMethods
-          .searchByName(searchEditingController.text)
-          .then((snapshot) {
-        searchResultSnapshot = snapshot;
-        print("$searchResultSnapshot");
-        setState(() {
-          isLoading = false;
-          haveUserSearched = true;
-        });
-      });
-    }
   }
 
   Widget userList() {
@@ -174,30 +154,14 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () async {
-              Navigator.of(context).pop();
-            }),
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
-            Text('Chats'),
+            Text('People'),
             SizedBox(width: MediaQuery.of(context).size.width * 0.01),
             Icon(Icons.chat_bubble, size: 20),
           ],
         ),
-        actions: [
-          // GestureDetector(
-          //   onTap: () async {
-          //     AuthService().signOut();
-          //     await Navigator.pushReplacement(context,
-          //         MaterialPageRoute(builder: (context) => Authenticate()));
-          //   },
-          //   child: Container(
-          //       padding: EdgeInsets.symmetric(horizontal: 16),
-          //       child: Icon(Icons.exit_to_app)),
-          // )
-        ],
       ),
       body: isLoading
           ? Container(
@@ -208,66 +172,25 @@ class _SearchState extends State<Search> {
           : Container(
               child: SingleChildScrollView(
                 child: Column(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.only(top: 8, left: 5, right: 5),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                          color: Colors.blue[400],
-                          borderRadius: BorderRadius.circular(60)),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: searchEditingController,
-                              style: simpleTextStyle(),
-                              decoration: InputDecoration(
-                                hintText: 'search user',
-                                hintStyle: TextStyle(
-                                  color: Colors.black38,
-                                  fontSize: 20,
-                                ),
-                                // border: InputBorder.none
-                              ),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              initiateSearch();
-                            },
-                            child: Container(
-                              height: 40,
-                              width: 40,
-                              decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0x36FFFFFF),
-                                        const Color(0x0FFFFFFF)
-                                      ],
-                                      begin: FractionalOffset.topLeft,
-                                      end: FractionalOffset.bottomRight),
-                                  borderRadius: BorderRadius.circular(40)),
-                              padding: EdgeInsets.all(12),
-                              child: Icon(
-                                Icons.search_sharp,
-                                color: Colors.white,
-                              ),
-                              // Image.asset(
-                              //   "assets/images/search_white.png",
-                              //   height: 25,
-                              //   width: 25,
-                              // )
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    userList()
-                  ],
+                  children: [userList()],
                 ),
               ),
             ),
-          );
+      bottomNavigationBar: ConvexAppBar(
+          items: [
+            // TabItem(icon: Icons.home, title: 'Home'),
+            TabItem(icon: Icons.settings_input_svideo, title: 'Profile'),
+            TabItem(icon: Icons.chat_bubble, title: 'Chat'),
+            TabItem(icon: Icons.people_sharp, title: 'People'),
+            // TabItem(icon: Icons.people, title: 'Profile'),
+          ],
+          initialActiveIndex: 2, //optional, default as 0
+          onTap: (int i) {
+            if (i == 1) {
+              Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => ChatRoom()));
+            }
+          }),
+    );
   }
 }

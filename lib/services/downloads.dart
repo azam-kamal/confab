@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:downloads_path_provider_28/downloads_path_provider_28.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -46,7 +45,6 @@ Future<void> download(String fileUrl, String fileName) async {
     final savePath = path.join(dir.path, fileName + ext);
     await _startDownload(fileUrl, savePath).then((value) {
       print('Download Complete!');
-      
     });
   } else {
     // handle the scenario when user declines the permissions

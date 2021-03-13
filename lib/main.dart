@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'helper/authenticate.dart';
 import 'helper/helperfunctions.dart';
 import 'views/chatrooms.dart';
@@ -7,7 +8,9 @@ import 'package:provider/provider.dart';
 import 'models/user.dart';
 
 const debug = true;
-Future<void> main() async {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(MyApp());
 }
 
@@ -56,7 +59,8 @@ class _MyAppState extends State<MyApp> {
                   debugShowCheckedModeBanner: false,
                   theme: ThemeData(
                     primaryColor: Colors.blue,
-                    scaffoldBackgroundColor: Colors.blue[50],
+                    scaffoldBackgroundColor: Colors.white,
+                    //Colors.blue[50],
                     accentColor: Colors.blue,
                     fontFamily: "OverpassRegular",
                     visualDensity: VisualDensity.adaptivePlatformDensity,
