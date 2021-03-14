@@ -32,12 +32,9 @@ String roomId;
 
 class _ChatState extends State<Chat> {
   Stream<QuerySnapshot> chats;
-
   TextEditingController messageEditingController = new TextEditingController();
-  ScrollController _scrollController = ScrollController();
-  _scrollToBottom() {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-  }
+  
+  
 
   bool isLoading = false;
   bool sc = false;
@@ -47,32 +44,36 @@ class _ChatState extends State<Chat> {
       builder: (context, snapshot) {
         return snapshot.hasData
             ? ListView.builder(
-                //reverse: true,
-                //controller: _scrollController,
+                reverse: true,
+                
+               
                 itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
-                  if (snapshot.data.docs[index].data()["attachment"] != null) {
-                    if (snapshot.data.docs[index].data()["type"] == 'image') {
+                  final reversedIndex = snapshot.data.docs.length - 1 - index;
+                  if (snapshot.data.docs[reversedIndex].data()["attachment"] != null) {
+                    if (snapshot.data.docs[reversedIndex].data()["type"] == 'image') {
                       return MessageTile(
                           attachment: InkWell(
                             onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => ImageViewer(snapshot
-                                        .data.docs[index]
+                                        .data.docs[reversedIndex]
                                         .data()["attachment"]))),
                             child: CachedNetworkImage(
+                              memCacheHeight: 200,
+                              memCacheWidth: 200,
                               placeholder: (context, url) =>
                                   CircularProgressIndicator(),
-                              imageUrl: snapshot.data.docs[index]
+                              imageUrl: snapshot.data.docs[reversedIndex]
                                   .data()["attachment"],
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[index].data()["sendBy"],
+                              snapshot.data.docs[reversedIndex].data()["sendBy"],
                           chatTime:
-                              snapshot.data.docs[index].data()["chatTime"]);
-                    } else if (snapshot.data.docs[index].data()["type"] ==
+                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
+                    } else if (snapshot.data.docs[reversedIndex].data()["type"] ==
                         'video') {
                       return MessageTile(
                           attachment: InkWell(
@@ -81,16 +82,18 @@ class _ChatState extends State<Chat> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => VideoViewer(snapshot
-                                          .data.docs[index]
+                                          .data.docs[reversedIndex]
                                           .data()["attachment"])));
                             },
                             child: Stack(
                               children: [
                                 Positioned(
                                   child: CachedNetworkImage(
+                                    memCacheHeight: 200,
+                                    memCacheWidth: 200,
                                     placeholder: (context, url) =>
                                         CircularProgressIndicator(),
-                                    imageUrl: snapshot.data.docs[index]
+                                    imageUrl: snapshot.data.docs[reversedIndex]
                                         .data()["thumbnail"],
                                   ),
                                 ),
@@ -109,10 +112,10 @@ class _ChatState extends State<Chat> {
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[index].data()["sendBy"],
+                              snapshot.data.docs[reversedIndex].data()["sendBy"],
                           chatTime:
-                              snapshot.data.docs[index].data()["chatTime"]);
-                    } else if (snapshot.data.docs[index].data()["type"] ==
+                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
+                    } else if (snapshot.data.docs[reversedIndex].data()["type"] ==
                         'other') {
                       return MessageTile(
                           attachment: Column(
@@ -127,7 +130,7 @@ class _ChatState extends State<Chat> {
                                     EasyLoading.showProgress(0.3,
                                         status: 'downloading...');
                                     await download(
-                                            snapshot.data.docs[index]
+                                            snapshot.data.docs[reversedIndex]
                                                 .data()["attachment"],
                                             DateFormat('ddmmyy')
                                                 .format(DateTime.now())
@@ -147,18 +150,18 @@ class _ChatState extends State<Chat> {
                             ],
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[index].data()["sendBy"],
+                              snapshot.data.docs[reversedIndex].data()["sendBy"],
                           chatTime:
-                              snapshot.data.docs[index].data()["chatTime"]);
+                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
                     }
                   } else {
                     return MessageTile(
-                        message: snapshot.data.docs[index].data()["message"],
+                        message: snapshot.data.docs[reversedIndex].data()["message"],
                         sendByMe: Constants.myName ==
-                            snapshot.data.docs[index].data()["sendBy"],
-                        chatTime: snapshot.data.docs[index].data()["chatTime"]);
+                            snapshot.data.docs[reversedIndex].data()["sendBy"],
+                        chatTime: snapshot.data.docs[reversedIndex].data()["chatTime"]);
                   }
-                  // _scrollToBottom();
+                 
                 })
             : CircularProgressIndicator();
       },
@@ -182,6 +185,13 @@ class _ChatState extends State<Chat> {
         messageEditingController.text = "";
       });
     }
+  }
+
+  @override
+  void dispose() {
+    messageEditingController.dispose();
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -349,15 +359,11 @@ class _ChatState extends State<Chat> {
 //File Code --- /////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
-    // _scrollController.animateTo(
-    //   _scrollController.position.maxScrollExtent,
-    //   curve: Curves.easeOut,
-    //   duration: const Duration(milliseconds: 500),
-    // );
+    
     String userNameUpdated =
         widget.userName[0].toUpperCase() + widget.userName.substring(1);
     String titleText = userNameUpdated;
-    // WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    
     return Scaffold(
       //appBar: appBarMain(context),
       appBar: AppBar(

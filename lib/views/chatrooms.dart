@@ -196,6 +196,8 @@ class ChatRoomsTile extends StatelessWidget {
                 child: profilePhoto != null
                     ? FittedBox(
                         child: CachedNetworkImage(
+                          memCacheHeight: 200,
+                          memCacheWidth: 200,
                           placeholder: (context, url) =>
                               CircularProgressIndicator(),
                           imageUrl: profilePhoto,

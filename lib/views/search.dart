@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:confab/helper/authenticate.dart';
 import 'package:confab/services/auth.dart';
@@ -107,7 +108,13 @@ class _SearchState extends State<Search> {
                     '',
                     child: profilePhoto != null
                         ? FittedBox(
-                            child: Image.network(profilePhoto),
+                            child: CachedNetworkImage(
+                          memCacheHeight: 200,
+                          memCacheWidth: 200,
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(),
+                          imageUrl: profilePhoto,
+                        ),
                             fit: BoxFit.fill)
                         : Icon(Icons.person, size: 50),
                     borderColor: Colors.blueAccent,
@@ -168,6 +175,13 @@ class _SearchState extends State<Search> {
   void initState() {
     allUsers();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    searchEditingController.dispose();
+    super.dispose();
   }
 
   @override
@@ -268,6 +282,6 @@ class _SearchState extends State<Search> {
                 ),
               ),
             ),
-          );
+    );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confab/helper/constants.dart';
@@ -18,7 +19,7 @@ class AllPeopleView extends StatefulWidget {
 
 class _AllPeopleViewState extends State<AllPeopleView> {
   DatabaseMethods databaseMethods = new DatabaseMethods();
-  TextEditingController searchEditingController = new TextEditingController();
+  //TextEditingController searchEditingController = new TextEditingController();
   QuerySnapshot searchResultSnapshot;
 
   bool isLoading = false;
@@ -87,7 +88,13 @@ class _AllPeopleViewState extends State<AllPeopleView> {
                     '',
                     child: profilePhoto != null
                         ? FittedBox(
-                            child: Image.network(profilePhoto),
+                            child: CachedNetworkImage(
+                          memCacheHeight: 200,
+                          memCacheWidth: 200,
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(),
+                          imageUrl: profilePhoto,
+                        ),
                             fit: BoxFit.fill)
                         : Icon(Icons.person, size: 50),
                     borderColor: Colors.blueAccent,
