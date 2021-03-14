@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import 'package:provider/provider.dart';
 import 'models/user.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 const debug = true;
 void main() async {
@@ -65,6 +66,7 @@ class _MyAppState extends State<MyApp> {
                     fontFamily: "OverpassRegular",
                     visualDensity: VisualDensity.adaptivePlatformDensity,
                   ),
+                  builder: EasyLoading.init(),
                   home: userIsLoggedIn != null
                       ? userIsLoggedIn
                           ? ChatRoom()

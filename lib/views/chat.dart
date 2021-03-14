@@ -15,6 +15,8 @@ import 'package:flutter_awesome_alert_box/flutter_awesome_alert_box.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'imageViewer.dart';
 import 'videoViewer.dart';
+import 'package:flutter_video_compress/flutter_video_compress.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -85,11 +87,11 @@ class _ChatState extends State<Chat> {
                             child: Stack(
                               children: [
                                 Positioned(
-                                  child: ThumbnailImage(
-                                    videoUrl: snapshot.data.docs[index]
-                                        .data()["attachment"],
-                                    width: 250,
-                                    height: 150,
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) =>
+                                        CircularProgressIndicator(),
+                                    imageUrl: snapshot.data.docs[index]
+                                        .data()["thumbnail"],
                                   ),
                                 ),
                                 Positioned(
@@ -121,18 +123,25 @@ class _ChatState extends State<Chat> {
                                     color: Colors.white,
                                   ),
                                   iconSize: 40,
-                                  onPressed: () => download(
-                                          snapshot.data.docs[index]
-                                              .data["attachment"],
-                                          DateFormat('ddmmyy')
-                                              .format(DateTime.now())
-                                              .toString())
-                                      .then((value) => InfoBgAlertBox(
+                                  onPressed: () async {
+                                    EasyLoading.showProgress(0.3,
+                                        status: 'downloading...');
+                                    await download(
+                                            snapshot.data.docs[index]
+                                                .data()["attachment"],
+                                            DateFormat('ddmmyy')
+                                                .format(DateTime.now())
+                                                .toString())
+                                        .then((value) {
+                                      EasyLoading.dismiss();
+                                      InfoBgAlertBox(
                                           context: context,
                                           title: 'Download',
                                           buttonText: 'Ok',
                                           infoMessage:
-                                              'File has being downloaded into download directory'))),
+                                              'File has being downloaded into download directory');
+                                    });
+                                  }),
                               Text('File',
                                   style: TextStyle(fontWeight: FontWeight.bold))
                             ],
@@ -233,27 +242,77 @@ class _ChatState extends State<Chat> {
     }
   }
 
+  addAttachmentVideo(String url, String fileType, String tUrl) {
+    if (file != null) {
+      DateTime now = DateTime.now();
+      String formattedDate = DateFormat('dd MMMM-kk:mm').format(now);
+      Map<String, dynamic> chatMessageMap = {
+        "sendBy": Constants.myName,
+        "message": '',
+        'chatTime': formattedDate,
+        'time': DateTime.now().millisecondsSinceEpoch,
+        'attachment': url,
+        'type': fileType,
+        'thumbnail': tUrl,
+      };
+      print(DateFormat.yMMMMd('en_US').add_Hm());
+      DatabaseMethods().addMessage(roomId, chatMessageMap);
+    }
+  }
+
 //Firestorage Code
   Future uploadFileOnStorage(String fileType) async {
     setState(() {
       isLoading = true;
+      EasyLoading.show(status: 'Uploading...');
     });
-
-    Reference storageReference =
-        FirebaseStorage.instance.ref().child('chatAttachments/${(file)}}');
-    //.child('profilePictures/${Path.basename(_image.path)}}');
-    UploadTask uploadTask = storageReference.putFile(file);
-    await uploadTask;
-    print('File Uploaded');
-    storageReference.getDownloadURL().then((fileURL) {
-      //updateFileURL(fileURL);
-      addAttachment(fileURL, fileType);
-      print('file URL :' + fileURL);
-      setState(() {
-        //  _uploadedFileURL = fileURL;
-        isLoading = false;
+    if (fileType == 'video') {
+      final _flutterVideoCompress = FlutterVideoCompress();
+      final thumbnailFile =
+          await _flutterVideoCompress.getThumbnailWithFile(file.path,
+              quality: 50, // default(100)
+              position: -1 // default(-1)
+              );
+      Reference storageReferenceThumbnails =
+          FirebaseStorage.instance.ref().child('thumbnails/${(file)}}');
+      UploadTask uploadTaskT =
+          storageReferenceThumbnails.putFile(thumbnailFile);
+      await uploadTaskT;
+      print('Thumbnail Uploaded');
+      storageReferenceThumbnails.getDownloadURL().then((tURL) async {
+        Reference storageReference =
+            FirebaseStorage.instance.ref().child('chatAttachments/${(file)}}');
+        UploadTask uploadTask = storageReference.putFile(file);
+        await uploadTask;
+        print('File Uploaded');
+        storageReference.getDownloadURL().then((fileURL) {
+          //updateFileURL(fileURL);
+          addAttachmentVideo(fileURL, fileType, tURL);
+          print('file URL :' + fileURL);
+          setState(() {
+            //  _uploadedFileURL = fileURL;
+            isLoading = false;
+            EasyLoading.dismiss();
+          });
+        });
       });
-    });
+    } else {
+      Reference storageReference =
+          FirebaseStorage.instance.ref().child('chatAttachments/${(file)}}');
+      UploadTask uploadTask = storageReference.putFile(file);
+      await uploadTask;
+      print('File Uploaded');
+      storageReference.getDownloadURL().then((fileURL) {
+        //updateFileURL(fileURL);
+        addAttachment(fileURL, fileType);
+        print('file URL :' + fileURL);
+        setState(() {
+          //  _uploadedFileURL = fileURL;
+          isLoading = false;
+          EasyLoading.dismiss();
+        });
+      });
+    }
   }
 
   ///
@@ -382,9 +441,9 @@ class _ChatState extends State<Chat> {
                           height: 40,
                           width: 40,
                           decoration: BoxDecoration(
+                              color: Colors.blue[300],
                               borderRadius: BorderRadius.circular(40)),
-                          padding: EdgeInsets.all(12),
-                          child: Icon(Icons.send_sharp)),
+                          child: Icon(Icons.arrow_upward_outlined)),
                     ),
                   ],
                 ),
