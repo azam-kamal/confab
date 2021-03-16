@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
+import 'package:confab/helper/helperfunctions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:video_thumbnail_generator/video_thumbnail_generator.dart';
 import '../helper/constants.dart';
 import '../services/database.dart';
@@ -17,24 +19,28 @@ import 'imageViewer.dart';
 import 'videoViewer.dart';
 import 'package:flutter_video_compress/flutter_video_compress.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import '../services/UserPresence.dart';
+import 'package:flutter_emoji_keyboard/flutter_emoji_keyboard.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
   final String userName;
   final String profilePhoto;
+  final String status;
 
-  Chat({this.chatRoomId, this.userName, this.profilePhoto});
+  Chat({this.chatRoomId, this.userName, this.profilePhoto, this.status});
   @override
   _ChatState createState() => _ChatState();
 }
 
 String roomId;
 
-class _ChatState extends State<Chat> {
+class _ChatState extends State<Chat> with WidgetsBindingObserver {
   Stream<QuerySnapshot> chats;
   TextEditingController messageEditingController = new TextEditingController();
-  
-  
+  void onEmojiSelected(Emoji emoji) {
+    messageEditingController.text += emoji.text;
+  }
 
   bool isLoading = false;
   bool sc = false;
@@ -45,13 +51,13 @@ class _ChatState extends State<Chat> {
         return snapshot.hasData
             ? ListView.builder(
                 reverse: true,
-                
-               
                 itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
                   final reversedIndex = snapshot.data.docs.length - 1 - index;
-                  if (snapshot.data.docs[reversedIndex].data()["attachment"] != null) {
-                    if (snapshot.data.docs[reversedIndex].data()["type"] == 'image') {
+                  if (snapshot.data.docs[reversedIndex].data()["attachment"] !=
+                      null) {
+                    if (snapshot.data.docs[reversedIndex].data()["type"] ==
+                        'image') {
                       return MessageTile(
                           attachment: InkWell(
                             onTap: () => Navigator.push(
@@ -70,10 +76,12 @@ class _ChatState extends State<Chat> {
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[reversedIndex].data()["sendBy"],
-                          chatTime:
-                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
-                    } else if (snapshot.data.docs[reversedIndex].data()["type"] ==
+                              snapshot.data.docs[reversedIndex]
+                                  .data()["sendBy"],
+                          chatTime: snapshot.data.docs[reversedIndex]
+                              .data()["chatTime"]);
+                    } else if (snapshot.data.docs[reversedIndex]
+                            .data()["type"] ==
                         'video') {
                       return MessageTile(
                           attachment: InkWell(
@@ -112,10 +120,12 @@ class _ChatState extends State<Chat> {
                             ),
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[reversedIndex].data()["sendBy"],
-                          chatTime:
-                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
-                    } else if (snapshot.data.docs[reversedIndex].data()["type"] ==
+                              snapshot.data.docs[reversedIndex]
+                                  .data()["sendBy"],
+                          chatTime: snapshot.data.docs[reversedIndex]
+                              .data()["chatTime"]);
+                    } else if (snapshot.data.docs[reversedIndex]
+                            .data()["type"] ==
                         'other') {
                       return MessageTile(
                           attachment: Column(
@@ -150,18 +160,20 @@ class _ChatState extends State<Chat> {
                             ],
                           ),
                           sendByMe: Constants.myName ==
-                              snapshot.data.docs[reversedIndex].data()["sendBy"],
-                          chatTime:
-                              snapshot.data.docs[reversedIndex].data()["chatTime"]);
+                              snapshot.data.docs[reversedIndex]
+                                  .data()["sendBy"],
+                          chatTime: snapshot.data.docs[reversedIndex]
+                              .data()["chatTime"]);
                     }
                   } else {
                     return MessageTile(
-                        message: snapshot.data.docs[reversedIndex].data()["message"],
+                        message:
+                            snapshot.data.docs[reversedIndex].data()["message"],
                         sendByMe: Constants.myName ==
                             snapshot.data.docs[reversedIndex].data()["sendBy"],
-                        chatTime: snapshot.data.docs[reversedIndex].data()["chatTime"]);
+                        chatTime: snapshot.data.docs[reversedIndex]
+                            .data()["chatTime"]);
                   }
-                 
                 })
             : CircularProgressIndicator();
       },
@@ -188,7 +200,27 @@ class _ChatState extends State<Chat> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+      // went to Background
+    }
+    if (state == AppLifecycleState.resumed) {
+      UserPresence.rtdbAndLocalFsPresence(
+          true, FirebaseAuth.instance.currentUser.uid);
+    }
+    if (state == AppLifecycleState.inactive) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+    }
+  }
+  // came back to Foreground
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     messageEditingController.dispose();
     // TODO: implement dispose
     super.dispose();
@@ -196,6 +228,7 @@ class _ChatState extends State<Chat> {
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     roomId = widget.chatRoomId;
     DatabaseMethods().getChats(widget.chatRoomId).then((val) {
       setState(() {
@@ -328,6 +361,16 @@ class _ChatState extends State<Chat> {
   ///
 //Attachment Code:
 
+  showEmojiBottomSheet(context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return EmojiKeyboard(
+            onEmojiSelected: onEmojiSelected,
+          );
+        });
+  }
+
   showAttachmentBottomSheet(context) {
     showModalBottomSheet(
         context: context,
@@ -359,11 +402,10 @@ class _ChatState extends State<Chat> {
 //File Code --- /////////////////////////////////////////
   @override
   Widget build(BuildContext context) {
-    
     String userNameUpdated =
         widget.userName[0].toUpperCase() + widget.userName.substring(1);
     String titleText = userNameUpdated;
-    
+
     return Scaffold(
       //appBar: appBarMain(context),
       appBar: AppBar(
@@ -391,7 +433,16 @@ class _ChatState extends State<Chat> {
               radius: 23,
             ),
             SizedBox(width: MediaQuery.of(context).size.width * 0.02),
-            Text(titleText == null ? 'Confab' : titleText),
+            Column(
+              children: [
+                Text(titleText == null ? 'Confab' : titleText),
+                SizedBox(height: MediaQuery.of(context).size.width * 0.01),
+                Text(
+                  widget.status,
+                  style: TextStyle(fontSize: 9),
+                ),
+              ],
+            ),
             SizedBox(width: MediaQuery.of(context).size.width * 0.02),
             Icon(Icons.chat_bubble, size: 20),
           ],
@@ -418,7 +469,7 @@ class _ChatState extends State<Chat> {
                     IconButton(
                       icon: Icon(Icons.emoji_emotions_outlined),
                       onPressed: () {
-                        showAttachmentBottomSheet(context);
+                        showEmojiBottomSheet(context);
                       },
                     ),
 

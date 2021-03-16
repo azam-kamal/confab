@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'helper/authenticate.dart';
 import 'helper/helperfunctions.dart';
+import 'services/UserPresence.dart';
 import 'views/chatrooms.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
@@ -31,10 +32,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   getLoggedInState() async {
-    await HelperFunctions.getUserLoggedInSharedPreference().then((value) {
+    await HelperFunctions.getUserLoggedInSharedPreference().then((value) async {
       setState(() {
         userIsLoggedIn = value;
       });
+      if (value==true) {
+        await UserPresence.rtdbAndLocalFsPresence(true,
+            HelperFunctions.getUserUidSharedPreference());
+      }
     });
   }
 

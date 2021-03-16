@@ -1,5 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
-
+import 'UserPresence.dart';
 import '../models/user.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../helper/helperfunctions.dart';
@@ -68,6 +68,9 @@ class AuthService {
   Future signOut() async {
     try {
       HelperFunctions.saveUserLoggedInSharedPreference(false);
+      HelperFunctions.saveUserUidSharedPreference('');
+      await UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
       return await _auth.signOut();
     } catch (e) {
       print(e.toString());

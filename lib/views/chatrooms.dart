@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:confab/models/user.dart';
+import '../services/UserPresence.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shrink_sidemenu/shrink_sidemenu.dart';
 import '../helper/authenticate.dart';
@@ -14,7 +14,7 @@ import '../views/search.dart';
 import 'package:flutter/material.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:liquid_ui/liquid_ui.dart';
-
+import 'package:intl/intl.dart';
 import 'allPeopleView.dart';
 
 class ChatRoom extends StatefulWidget {
@@ -47,6 +47,7 @@ class _ChatRoomState extends State<ChatRoom> {
     setState(() {});
     var myUserName = await HelperFunctions.getUserNameSharedPreference();
     myProfilePhoto = await HelperFunctions.getUserProfileSharedPreference();
+
     myName = myUserName[0].toUpperCase() + myUserName.substring(1);
     chats = (await FirebaseFirestore.instance
             .collection('chatRoom')
@@ -85,9 +86,12 @@ class _ChatRoomState extends State<ChatRoom> {
               var userName = otherUserNames[index];
               var otherUser = otherUsers[index];
               return ChatRoomsTile(
-                  userName: userName,
-                  chatRoomId: chat["chatRoomId"],
-                  profilePhoto: otherUser['profilePhoto']);
+                userName: userName,
+                chatRoomId: chat["chatRoomId"],
+                profilePhoto: otherUser['profilePhoto'],
+                userStatus: otherUser['state'],
+                lastChanged: otherUser['last_changed'],
+              );
             })
         : Center(child: CircularProgressIndicator());
   }
@@ -168,21 +172,40 @@ class ChatRoomsTile extends StatelessWidget {
   final String userName;
   final String chatRoomId;
   final String profilePhoto;
+  final String userStatus;
+  final lastChanged;
 
   ChatRoomsTile(
-      {this.userName, @required this.chatRoomId, @required this.profilePhoto});
-
+      {this.userName,
+      @required this.chatRoomId,
+      @required this.profilePhoto,
+      this.userStatus,
+      this.lastChanged});
+  String status;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        if (userStatus == 'offline') {
+          // String formattedDate =
+          //     DateFormat('dd MMMM-kk:mm').format(lastChanged);
+          // status = formattedDate;
+          status = 'offline';
+        } 
+        if(userStatus==null){
+          status = 'offline';
+        }
+        if(userStatus=='online'){
+          status = 'online';
+        }
         Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => Chat(
                     chatRoomId: chatRoomId,
                     userName: userName,
-                    profilePhoto: profilePhoto)));
+                    profilePhoto: profilePhoto,
+                    status: status)));
       },
       child: Container(
           //  color: Colors.blue[50],
@@ -261,6 +284,8 @@ Widget buildMenu(BuildContext context) {
               SizedBox(height: 20.0),
               GestureDetector(
                 onTap: () async {
+                  await UserPresence.rtdbAndLocalFsPresence(
+                      false, FirebaseAuth.instance.currentUser.uid);
                   AuthService().signOut();
                   await Navigator.pushReplacement(context,
                       MaterialPageRoute(builder: (context) => Authenticate()));

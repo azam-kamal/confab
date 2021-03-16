@@ -91,6 +91,7 @@ class _SearchState extends State<Search> {
                   chatRoomId: chatRoomId,
                   userName: userName,
                   profilePhoto: profilePhoto,
+                  status: 'offline',
                 )));
   }
 

@@ -71,6 +71,7 @@ class _AllPeopleViewState extends State<AllPeopleView> {
                   chatRoomId: chatRoomId,
                   userName: userName,
                   profilePhoto: profilePhoto,
+                  status: 'offline',
                 )));
   }
 

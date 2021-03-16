@@ -58,3 +58,8 @@ class Video {
   String link;
   Video({this.link});
 }
+
+class UserData {
+  final String uid;
+  UserData({this.uid});
+}

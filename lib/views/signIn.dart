@@ -1,3 +1,7 @@
+import 'package:confab/services/UserPresence.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 import '../helper/helperfunctions.dart';
 import '../helper/theme.dart';
 import '../services/auth.dart';
@@ -49,6 +53,10 @@ class _SignInState extends State<SignIn> {
               userInfoSnapshot.docs[0].data()["userEmail"]);
           HelperFunctions.saveUserProfileSharedPreference(
               userInfoSnapshot.docs[0].data()["profilePhoto"]);
+          HelperFunctions.saveUserUidSharedPreference(
+              FirebaseAuth.instance.currentUser.uid);
+          // FirebaseDatabase.instance.reference().keepSynced(true);
+          await UserPresence.rtdbAndLocalFsPresence(true,FirebaseAuth.instance.currentUser.uid);
 
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => ChatRoom()));
@@ -63,11 +71,16 @@ class _SignInState extends State<SignIn> {
   }
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       //  resizeToAvoidBottomInset: false,
       //appBar: appBarMain(context),
-      body: isLoading 
+      body: isLoading
           ? Container(
               child: Center(child: CircularProgressIndicator()),
             )

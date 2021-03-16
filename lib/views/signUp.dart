@@ -1,3 +1,6 @@
+import 'package:confab/services/UserPresence.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../helper/helperfunctions.dart';
 import '../helper/theme.dart';
 import '../services/auth.dart';
@@ -35,7 +38,7 @@ class _SignUpState extends State<SignUp> {
       await authService
           .signUpWithEmailAndPassword(
               emailEditingController.text, passwordEditingController.text)
-          .then((result) {
+          .then((result) async {
         if (result != null) {
           Map<String, String> userDataMap = {
             "userName": usernameEditingController.text,
@@ -49,6 +52,7 @@ class _SignUpState extends State<SignUp> {
               usernameEditingController.text);
           HelperFunctions.saveUserEmailSharedPreference(
               emailEditingController.text);
+              await UserPresence.rtdbAndLocalFsPresence(true,FirebaseAuth.instance.currentUser.uid);
 /////// Yahan se Agey pics leni he
           ///
           Navigator.pushReplacement(context,
