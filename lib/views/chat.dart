@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
-import 'package:confab/helper/helperfunctions.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:video_thumbnail_generator/video_thumbnail_generator.dart';
 import '../helper/constants.dart';
 import '../services/database.dart';
 import '../widget/widget.dart';
@@ -21,6 +19,7 @@ import 'package:flutter_video_compress/flutter_video_compress.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../services/UserPresence.dart';
 import 'package:flutter_emoji_keyboard/flutter_emoji_keyboard.dart';
+import 'package:time_formatter/time_formatter.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;
@@ -37,6 +36,7 @@ String roomId;
 
 class _ChatState extends State<Chat> with WidgetsBindingObserver {
   Stream<QuerySnapshot> chats;
+  Stream<QuerySnapshot> status;
   TextEditingController messageEditingController = new TextEditingController();
   void onEmojiSelected(Emoji emoji) {
     messageEditingController.text += emoji.text;
@@ -44,6 +44,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
 
   bool isLoading = false;
   bool sc = false;
+
   Widget chatMessages() {
     return StreamBuilder(
       stream: chats,
@@ -235,8 +236,18 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
         chats = val;
       });
     });
+
+    DatabaseMethods().getStatus(widget.userName).then((snapshot) {
+      setState(() {
+        status = snapshot;
+      });
+    });
+
     super.initState();
   }
+
+  String stats;
+  String lastSeen;
 // File Code/////////////////////////////////////////////
 
   File file;
@@ -437,10 +448,35 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
               children: [
                 Text(titleText == null ? 'Confab' : titleText),
                 SizedBox(height: MediaQuery.of(context).size.width * 0.01),
-                Text(
-                  widget.status,
-                  style: TextStyle(fontSize: 9),
-                ),
+                StreamBuilder(
+                    stream: status,
+                    builder: (context, AsyncSnapshot<dynamic> snapshot) {
+                      return snapshot.hasData
+                          ? snapshot.data.docs[0].data()["state"] == 'offline'
+                              ? Text(
+                                  'Last Seen ' +
+                                      (DateTime.fromMicrosecondsSinceEpoch(
+                                                      snapshot.data.docs[0]
+                                                          .data()[
+                                                              "last_changed"]
+                                                          .microsecondsSinceEpoch)
+                                                  .hour
+                                                  .toString() +
+                                              ":" +
+                                              (DateTime.fromMicrosecondsSinceEpoch(
+                                                          snapshot.data.docs[0]
+                                                              .data()[
+                                                                  "last_changed"]
+                                                              .microsecondsSinceEpoch)
+                                                      .minute)
+                                                  .toString())
+                                          .toString(),
+                                  style: TextStyle(fontSize: 10),
+                                )
+                              : Text(snapshot.data.docs[0].data()["state"],
+                                  style: TextStyle(fontSize: 10))
+                          : CircularProgressIndicator();
+                    }),
               ],
             ),
             SizedBox(width: MediaQuery.of(context).size.width * 0.02),

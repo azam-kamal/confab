@@ -2,12 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseMethods {
-  // Future<void> addUserInfo(userData) async {
-  //   Firestore.instance.collection("users").add(userData).catchError((e) {
-  //     print(e.toString());
-  //   });
-  // }
-
   Future<void> addUserInfo(userData) async {
     await FirebaseFirestore.instance
         .collection("users")
@@ -16,14 +10,6 @@ class DatabaseMethods {
         .catchError((e) {
       print(e.toString());
     });
-  }
-
-  Future<void> getProfilePhoto(String userName) async {
-    // await Firestore.instance
-    //     .collection('users')
-    //     .document((await FirebaseAuth.instance.currentUser()).uid)
-    //     .get().;
-    
   }
 
   getUserInfo(String email) async {
@@ -37,10 +23,7 @@ class DatabaseMethods {
   }
 
   getAllUser() async {
-    return FirebaseFirestore.instance
-        .collection("users")
-        .get()
-        .catchError((e) {
+    return FirebaseFirestore.instance.collection("users").get().catchError((e) {
       print(e.toString());
     });
   }
@@ -71,6 +54,22 @@ class DatabaseMethods {
         .snapshots();
   }
 
+  getStatus(String userName) async {
+    return FirebaseFirestore.instance
+        .collection("users")
+        .where('userName', isEqualTo: userName)
+        .snapshots();
+    // .snapshots();
+  }
+
+  getStatusChatRoom(String userName) {
+    return FirebaseFirestore.instance
+        .collection("users")
+        .where('userName', isEqualTo: userName)
+        .snapshots();
+    // .snapshots();
+  }
+
   Future<void> addMessage(String chatRoomId, chatMessageData) {
     FirebaseFirestore.instance
         .collection("chatRoom")
@@ -92,7 +91,6 @@ class DatabaseMethods {
   //     print(e.toString());
   //   });
   // }
-  
 
   getUserChats(String itIsMyName) async {
     return await FirebaseFirestore.instance
@@ -100,4 +98,14 @@ class DatabaseMethods {
         .where('users', arrayContains: itIsMyName)
         .snapshots();
   }
+
+//   getUserStats(String itIsMyName) async {
+//     return await FirebaseFirestore.instance
+//         .collection("chatRoom")
+//         .where('users', arrayContains: itIsMyName)
+//         .snapshots().asyncMap((event) => event.)  }
+// }
+
+//snapshot.data.docs[reversedIndex].data()["attachment"]
+
 }

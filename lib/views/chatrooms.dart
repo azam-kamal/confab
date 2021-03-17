@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/UserPresence.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/UserPresence.dart';
 import 'package:shrink_sidemenu/shrink_sidemenu.dart';
 import '../helper/authenticate.dart';
 import '../helper/constants.dart';
@@ -27,8 +27,8 @@ var myProfilePhoto;
 
 class _ChatRoomState extends State<ChatRoom> {
   Stream chatRooms;
-  Stream collectionStream =
-      FirebaseFirestore.instance.collection('users').snapshots();
+  Stream stateData;
+  String stateLive;
   String photoURL;
   bool isLoading = true;
   List chats = [];
@@ -39,6 +39,7 @@ class _ChatRoomState extends State<ChatRoom> {
   void initState() {
     getUsers();
     getUserInfogetChats();
+
     super.initState();
   }
 
@@ -76,22 +77,31 @@ class _ChatRoomState extends State<ChatRoom> {
     setState(() {});
   }
 
+  int indexx = 0;
   Widget chatRoomsList() {
     return !isLoading && chats.length > 0
-        ? ListView.builder(
-            itemCount: chats.length,
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              var chat = chats[index];
-              var userName = otherUserNames[index];
-              var otherUser = otherUsers[index];
-              return ChatRoomsTile(
-                userName: userName,
-                chatRoomId: chat["chatRoomId"],
-                profilePhoto: otherUser['profilePhoto'],
-                userStatus: otherUser['state'],
-                lastChanged: otherUser['last_changed'],
-              );
+        ? StreamBuilder(
+            stream: DatabaseMethods().getStatusChatRoom(otherUserNames[indexx]),
+            builder: (context, AsyncSnapshot<dynamic> snapshot) {
+              return snapshot.hasData
+                  ? ListView.builder(
+                      itemCount: chats.length,
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        var chat = chats[index];
+                        var userName = otherUserNames[index];
+                        var otherUser = otherUsers[index];
+                        indexx++;
+                        return ChatRoomsTile(
+                          userName: userName,
+                          chatRoomId: chat["chatRoomId"],
+                          profilePhoto: otherUser['profilePhoto'],
+                          userStatus: snapshot.data.docs[0].data()["state"],
+                          lastChanged:
+                              snapshot.data.docs[0].data()["last_changed"],
+                        );
+                      })
+                  : Center(child: CircularProgressIndicator());
             })
         : Center(child: CircularProgressIndicator());
   }
@@ -168,6 +178,39 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 }
 
+// Widget status(String name) {
+//   state = DatabaseMethods().getStatus(name);
+//   return StreamBuilder(
+//       stream: state,
+//       builder: (context, AsyncSnapshot<dynamic> snapshot) {
+//         return snapshot.hasData
+//             ? snapshot.data.docs[0].data()["state"] == 'offline'
+//                 ? Text(
+//                     'Last Seen ' +
+//                         (DateTime.fromMicrosecondsSinceEpoch(snapshot
+//                                         .data.docs[0]
+//                                         .data()["last_changed"]
+//                                         .microsecondsSinceEpoch)
+//                                     .hour
+//                                     .toString() +
+//                                 ":" +
+//                                 (DateTime.fromMicrosecondsSinceEpoch(snapshot
+//                                             .data.docs[0]
+//                                             .data()["last_changed"]
+//                                             .microsecondsSinceEpoch)
+//                                         .minute)
+//                                     .toString())
+//                             .toString(),
+//                     style: TextStyle(fontSize: 10),
+//                   )
+//                 : Text(snapshot.data.docs[0].data()["state"],
+//                     style: TextStyle(fontSize: 10))
+//             : CircularProgressIndicator();
+//       });
+// }
+
+Stream<QuerySnapshot> state;
+
 class ChatRoomsTile extends StatelessWidget {
   final String userName;
   final String chatRoomId;
@@ -181,23 +224,11 @@ class ChatRoomsTile extends StatelessWidget {
       @required this.profilePhoto,
       this.userStatus,
       this.lastChanged});
-  String status;
+  String st;
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (userStatus == 'offline') {
-          // String formattedDate =
-          //     DateFormat('dd MMMM-kk:mm').format(lastChanged);
-          // status = formattedDate;
-          status = 'offline';
-        } 
-        if(userStatus==null){
-          status = 'offline';
-        }
-        if(userStatus=='online'){
-          status = 'online';
-        }
         Navigator.push(
             context,
             MaterialPageRoute(
@@ -205,43 +236,67 @@ class ChatRoomsTile extends StatelessWidget {
                     chatRoomId: chatRoomId,
                     userName: userName,
                     profilePhoto: profilePhoto,
-                    status: status)));
+                    status: st)));
       },
       child: Container(
           //  color: Colors.blue[50],
           //padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           margin: EdgeInsets.only(bottom: 2),
           child: Card(
-            elevation: 1,
-            child: ListTile(
-              leading: CircularProfileAvatar(
-                '',
-                child: profilePhoto != null
-                    ? FittedBox(
-                        child: CachedNetworkImage(
-                          memCacheHeight: 200,
-                          memCacheWidth: 200,
-                          placeholder: (context, url) =>
-                              CircularProgressIndicator(),
-                          imageUrl: profilePhoto,
-                        ),
-                        fit: BoxFit.fill,
-                      )
-                    : Icon(Icons.person, size: 20),
-                borderColor: Colors.blueAccent,
-                borderWidth: 4,
-                elevation: 7,
-                radius: 25,
-              ),
-              title: Text(userName[0].toUpperCase() + userName.substring(1),
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'OverpassRegular',
-                      fontWeight: FontWeight.w400)),
-            ),
-          )),
+              elevation: 1,
+              child: ListTile(
+                  leading: CircularProfileAvatar(
+                    '',
+                    child: profilePhoto != null
+                        ? FittedBox(
+                            child: CachedNetworkImage(
+                              memCacheHeight: 200,
+                              memCacheWidth: 200,
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              imageUrl: profilePhoto,
+                            ),
+                            fit: BoxFit.fill,
+                          )
+                        : Icon(Icons.person, size: 20),
+                    borderColor: Colors.blueAccent,
+                    borderWidth: 4,
+                    elevation: 7,
+                    radius: 25,
+                  ),
+                  title: Text(userName[0].toUpperCase() + userName.substring(1),
+                      textAlign: TextAlign.start,
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                          fontFamily: 'OverpassRegular',
+                          fontWeight: FontWeight.w400)),
+                  trailing: userStatus == 'offline'
+                      ? Text(
+                          'Last Seen ' +
+                              (DateTime.fromMicrosecondsSinceEpoch(lastChanged
+                                              .microsecondsSinceEpoch)
+                                          .hour
+                                          .toString() +
+                                      ":" +
+                                      (DateTime.fromMicrosecondsSinceEpoch(
+                                                  lastChanged
+                                                      .microsecondsSinceEpoch)
+                                              .minute)
+                                          .toString())
+                                  .toString(),
+                          style: TextStyle(fontSize: 10),
+                        )
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              color: Colors.green,
+                            ),
+                            Text(userStatus),
+                          ],
+                        )))),
     );
   }
 }

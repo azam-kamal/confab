@@ -59,6 +59,7 @@ dependencies:
   liquid_ui:
   flutter_video_compress: ^0.3.7+8
   flutter_easyloading: ^2.2.2
+  time_formatter: ^1.0.0+5
   
   
     
