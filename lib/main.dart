@@ -36,9 +36,9 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         userIsLoggedIn = value;
       });
-      if (value==true) {
-        await UserPresence.rtdbAndLocalFsPresence(true,
-            HelperFunctions.getUserUidSharedPreference());
+      if (value == true) {
+        UserPresence.rtdbAndLocalFsPresence(
+            true, await HelperFunctions.getUserUidSharedPreference());
       }
     });
   }

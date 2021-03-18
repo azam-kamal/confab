@@ -62,14 +62,6 @@ class DatabaseMethods {
     // .snapshots();
   }
 
-  getStatusChatRoom(String userName) {
-    return FirebaseFirestore.instance
-        .collection("users")
-        .where('userName', isEqualTo: userName)
-        .snapshots();
-    // .snapshots();
-  }
-
   Future<void> addMessage(String chatRoomId, chatMessageData) {
     FirebaseFirestore.instance
         .collection("chatRoom")
@@ -81,31 +73,10 @@ class DatabaseMethods {
     });
   }
 
-  //2
-  // Future<void> addMessage(String chatRoomId, chatMessageData) async {
-  //   Firestore.instance
-  //       .collection("chatRoom")
-  //       .document(chatRoomId)
-  //       .collection("chats").document((await FirebaseAuth.instance.currentUser()).uid).setData(chatMessageData)
-  //       .catchError((e) {
-  //     print(e.toString());
-  //   });
-  // }
-
   getUserChats(String itIsMyName) async {
     return await FirebaseFirestore.instance
         .collection("chatRoom")
         .where('users', arrayContains: itIsMyName)
         .snapshots();
   }
-
-//   getUserStats(String itIsMyName) async {
-//     return await FirebaseFirestore.instance
-//         .collection("chatRoom")
-//         .where('users', arrayContains: itIsMyName)
-//         .snapshots().asyncMap((event) => event.)  }
-// }
-
-//snapshot.data.docs[reversedIndex].data()["attachment"]
-
 }

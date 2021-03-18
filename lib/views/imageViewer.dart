@@ -1,11 +1,47 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:confab/services/UserPresence.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-class ImageViewer extends StatelessWidget {
+class ImageViewer extends StatefulWidget {
   final String image;
 
   ImageViewer(this.image);
-  // const ImageViewer({Key key}) : super(key: key);
+
+  @override
+  _ImageViewerState createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<ImageViewer> with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+      // went to Background
+    }
+    if (state == AppLifecycleState.resumed) {
+      UserPresence.rtdbAndLocalFsPresence(
+          true, FirebaseAuth.instance.currentUser.uid);
+    }
+    if (state == AppLifecycleState.inactive) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +64,7 @@ class ImageViewer extends StatelessWidget {
         // margin: EdgeInsets.all(20),
         child: CachedNetworkImage(
           placeholder: (context, url) => CircularProgressIndicator(),
-          imageUrl: image,
+          imageUrl: widget.image,
         ),
       ),
     );

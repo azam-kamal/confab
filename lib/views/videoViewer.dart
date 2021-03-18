@@ -1,3 +1,5 @@
+import 'package:confab/services/UserPresence.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
@@ -10,12 +12,32 @@ class VideoViewer extends StatefulWidget {
   _VideoViewerState createState() => _VideoViewerState();
 }
 
-class _VideoViewerState extends State<VideoViewer> {
+class _VideoViewerState extends State<VideoViewer> with WidgetsBindingObserver {
   VideoPlayerController controller;
   ChewieController chewieController;
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+      // went to Background
+    }
+    if (state == AppLifecycleState.resumed) {
+      UserPresence.rtdbAndLocalFsPresence(
+          true, FirebaseAuth.instance.currentUser.uid);
+    }
+    if (state == AppLifecycleState.inactive) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+    }
+  }
+  // came back to Foreground
+
+  @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     controller = VideoPlayerController.network(widget.videoLink);
     chewieController = ChewieController(
       videoPlayerController: controller,
@@ -27,6 +49,7 @@ class _VideoViewerState extends State<VideoViewer> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     controller.dispose();
     chewieController.dispose();
 

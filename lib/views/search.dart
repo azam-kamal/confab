@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:confab/helper/authenticate.dart';
+import 'package:confab/services/UserPresence.dart';
 import 'package:confab/services/auth.dart';
 import 'package:confab/views/allPeopleView.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sizer/sizer.dart';
 import '../helper/constants.dart';
 import '../services/database.dart';
@@ -19,7 +21,7 @@ class Search extends StatefulWidget {
   _SearchState createState() => _SearchState();
 }
 
-class _SearchState extends State<Search> {
+class _SearchState extends State<Search> with WidgetsBindingObserver {
   DatabaseMethods databaseMethods = new DatabaseMethods();
   TextEditingController searchEditingController = new TextEditingController();
   QuerySnapshot searchResultSnapshot;
@@ -110,12 +112,12 @@ class _SearchState extends State<Search> {
                     child: profilePhoto != null
                         ? FittedBox(
                             child: CachedNetworkImage(
-                          memCacheHeight: 200,
-                          memCacheWidth: 200,
-                          placeholder: (context, url) =>
-                              CircularProgressIndicator(),
-                          imageUrl: profilePhoto,
-                        ),
+                              memCacheHeight: 200,
+                              memCacheWidth: 200,
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                              imageUrl: profilePhoto,
+                            ),
                             fit: BoxFit.fill)
                         : Icon(Icons.person, size: 50),
                     borderColor: Colors.blueAccent,
@@ -173,7 +175,27 @@ class _SearchState extends State<Search> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+      // went to Background
+    }
+    if (state == AppLifecycleState.resumed) {
+      UserPresence.rtdbAndLocalFsPresence(
+          true, FirebaseAuth.instance.currentUser.uid);
+    }
+    if (state == AppLifecycleState.inactive) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+    }
+  }
+  // came back to Foreground
+
+  @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     allUsers();
     super.initState();
   }
@@ -181,6 +203,7 @@ class _SearchState extends State<Search> {
   @override
   void dispose() {
     // TODO: implement dispose
+    WidgetsBinding.instance.removeObserver(this);
     searchEditingController.dispose();
     super.dispose();
   }

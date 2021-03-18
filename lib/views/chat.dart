@@ -19,7 +19,6 @@ import 'package:flutter_video_compress/flutter_video_compress.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import '../services/UserPresence.dart';
 import 'package:flutter_emoji_keyboard/flutter_emoji_keyboard.dart';
-import 'package:time_formatter/time_formatter.dart';
 
 class Chat extends StatefulWidget {
   final String chatRoomId;

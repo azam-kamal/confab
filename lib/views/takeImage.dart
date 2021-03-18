@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:confab/helper/authenticate.dart';
+import 'package:confab/services/UserPresence.dart';
 import 'package:confab/services/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -17,7 +18,39 @@ class ImagePickScreen extends StatefulWidget {
   _ImagePickScreenState createState() => _ImagePickScreenState();
 }
 
-class _ImagePickScreenState extends State<ImagePickScreen> {
+class _ImagePickScreenState extends State<ImagePickScreen>
+    with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+      // went to Background
+    }
+    if (state == AppLifecycleState.resumed) {
+      UserPresence.rtdbAndLocalFsPresence(
+          true, FirebaseAuth.instance.currentUser.uid);
+    }
+    if (state == AppLifecycleState.inactive) {
+      UserPresence.rtdbAndLocalFsPresence(
+          false, FirebaseAuth.instance.currentUser.uid);
+    }
+  }
+  // came back to Foreground
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
 //Firestore Code (Raza Bhai)
 
   bool isLoading = false;
