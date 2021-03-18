@@ -11,6 +11,7 @@ import 'package:sizer/sizer.dart';
 
 import 'chat.dart';
 import 'chatrooms.dart';
+import 'profileView.dart';
 
 class AllPeopleView extends StatefulWidget {
   AllPeopleView({Key key}) : super(key: key);
@@ -106,7 +107,8 @@ class _AllPeopleViewState extends State<AllPeopleView>
                     elevation: 7,
                     radius: 23,
                   ),
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                  //SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                  SizedBox(width: 2.0.w),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -138,7 +140,7 @@ class _AllPeopleViewState extends State<AllPeopleView>
                   color: Colors.blue, borderRadius: BorderRadius.circular(24)),
               child: Text(
                 "Message",
-                style: TextStyle(color: Colors.black, fontSize: 16),
+                style: TextStyle(color: Colors.black, fontSize: 14.0.sp),
               ),
             ),
           )
@@ -195,8 +197,8 @@ class _AllPeopleViewState extends State<AllPeopleView>
         title: Row(
           children: [
             Text('People'),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01),
-            Icon(Icons.chat_bubble, size: 20),
+            SizedBox(width: 1.0.w),
+            Icon(Icons.chat_bubble, size: 20.0.sp),
           ],
         ),
       ),
@@ -223,9 +225,17 @@ class _AllPeopleViewState extends State<AllPeopleView>
           ],
           initialActiveIndex: 2, //optional, default as 0
           onTap: (int i) {
+            if (i == 0) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ProfileView()));
+            }
             if (i == 1) {
               Navigator.push(
                   context, MaterialPageRoute(builder: (context) => ChatRoom()));
+            }
+            if (i == 2) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => AllPeopleView()));
             }
           }),
     );

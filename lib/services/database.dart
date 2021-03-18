@@ -5,7 +5,7 @@ class DatabaseMethods {
   Future<void> addUserInfo(userData) async {
     await FirebaseFirestore.instance
         .collection("users")
-        .doc(await FirebaseAuth.instance.currentUser.uid)
+        .doc(FirebaseAuth.instance.currentUser.uid)
         .set(userData)
         .catchError((e) {
       print(e.toString());
@@ -35,7 +35,7 @@ class DatabaseMethods {
         .get();
   }
 
-  Future<bool> addChatRoom(chatRoom, chatRoomId) {
+  addChatRoom(chatRoom, chatRoomId) {
     FirebaseFirestore.instance
         .collection("chatRoom")
         .doc(chatRoomId)
@@ -62,7 +62,7 @@ class DatabaseMethods {
     // .snapshots();
   }
 
-  Future<void> addMessage(String chatRoomId, chatMessageData) {
+  addMessage(String chatRoomId, chatMessageData) {
     FirebaseFirestore.instance
         .collection("chatRoom")
         .doc(chatRoomId)
@@ -74,7 +74,7 @@ class DatabaseMethods {
   }
 
   getUserChats(String itIsMyName) async {
-    return await FirebaseFirestore.instance
+    return FirebaseFirestore.instance
         .collection("chatRoom")
         .where('users', arrayContains: itIsMyName)
         .snapshots();

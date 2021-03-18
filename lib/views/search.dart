@@ -1,10 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
-import 'package:confab/helper/authenticate.dart';
 import 'package:confab/services/UserPresence.dart';
-import 'package:confab/services/auth.dart';
-import 'package:confab/views/allPeopleView.dart';
-import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sizer/sizer.dart';
 import '../helper/constants.dart';

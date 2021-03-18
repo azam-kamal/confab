@@ -1,7 +1,5 @@
 import 'package:confab/services/UserPresence.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
-
 import '../helper/helperfunctions.dart';
 import '../helper/theme.dart';
 import '../services/auth.dart';
@@ -56,7 +54,8 @@ class _SignInState extends State<SignIn> {
           HelperFunctions.saveUserUidSharedPreference(
               FirebaseAuth.instance.currentUser.uid);
           // FirebaseDatabase.instance.reference().keepSynced(true);
-          await UserPresence.rtdbAndLocalFsPresence(true,FirebaseAuth.instance.currentUser.uid);
+          await UserPresence.rtdbAndLocalFsPresence(
+              true, FirebaseAuth.instance.currentUser.uid);
 
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => ChatRoom()));

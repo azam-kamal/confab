@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:sizer/sizer.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -113,7 +114,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                                     child: Center(
                                         child: Icon(
                                       Icons.play_circle_outline_rounded,
-                                      size: 100,
+                                      size: 80.0.sp,
                                       color: Colors.blue[300],
                                     ))),
                               ],
@@ -135,7 +136,7 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
                                     Icons.file_copy,
                                     color: Colors.white,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 35.0.sp,
                                   onPressed: () async {
                                     EasyLoading.showProgress(0.3,
                                         status: 'downloading...');
@@ -222,7 +223,6 @@ class _ChatState extends State<Chat> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     messageEditingController.dispose();
-    // TODO: implement dispose
     super.dispose();
   }
 

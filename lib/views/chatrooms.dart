@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:circular_profile_avatar/circular_profile_avatar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:confab/views/profileView.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/UserPresence.dart';
 import 'package:shrink_sidemenu/shrink_sidemenu.dart';
@@ -214,6 +215,10 @@ class _ChatRoomState extends State<ChatRoom> with WidgetsBindingObserver {
             ],
             initialActiveIndex: 1, //optional, default as 0
             onTap: (int i) {
+              if (i == 0) {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ProfileView()));
+              }
               if (i == 2) {
                 Navigator.push(context,
                     MaterialPageRoute(builder: (context) => AllPeopleView()));
